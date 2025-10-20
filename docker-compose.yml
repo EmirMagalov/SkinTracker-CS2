@@ -33,7 +33,7 @@ services:
       dockerfile: Dockerfile-bot
     container_name: bot
     volumes:
-      - ./bot:/app
+      - ./bot:/bot_app
     working_dir: /bot_app
     #    depends_on:
     #      - db

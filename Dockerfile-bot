@@ -6,6 +6,6 @@ WORKDIR /bot_app
 COPY ./requirements.txt /bot_app/
 RUN pip install -r requirements.txt
 
-CMD ["python", "-m", "app.py"]
+CMD ["python", "app.py"]
 
 

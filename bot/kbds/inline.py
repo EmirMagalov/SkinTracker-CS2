@@ -29,7 +29,7 @@ def condition_kbds(skin_id: str):
     # Добавляем кнопку «Инвентарь»
     builder.row(
         InlineKeyboardButton(
-            text="Инвентарь ⚙️",
+            text="Инвентарь 🗄️",
             callback_data="inventory_0"
         )
     )

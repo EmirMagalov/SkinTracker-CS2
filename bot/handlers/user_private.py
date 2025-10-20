@@ -46,7 +46,7 @@ async def build_skin_message(user_id, skin, condition=None):
     if not user_skin:
         kb['Добавить в инвентарь ✚'] = f'add|{skin["skin_id"]}|{skins_price.get("lowest_price")}|{condition}'
 
-    kb[f'Инвентарь ⚙️'] = 'inventory_0'
+    kb[f'Инвентарь 🗄️'] = 'inventory_0'
     if condition:
         kb['Назад'] = f'back|{skin["skin_id"]}'
     return caption, kb
@@ -64,7 +64,7 @@ async def start_message(message: types.Message):
                          "Узнавай текущую минимальную и среднюю стоимость скинов, получай мгновенные уведомления, когда цена изменяется, "
                          "и будь всегда в курсе выгодных предложений на рынке Steam.⚡\n\n"
                          "<i>🔍 Напиши название предмета, который хочешь найти!</i>"
-                         , reply_markup=create_inline_kb({'Инвентарь ⚙️': 'inventory_0'})
+                         , reply_markup=create_inline_kb({'Инвентарь 🗄️': 'inventory_0'})
                          , parse_mode="HTML")
 
 
@@ -236,7 +236,7 @@ async def inventory_show(user_id, index, call: types.CallbackQuery, delete=False
     caption, _ = await build_skin_message(user_id=user_id, skin=skin,
                                           condition=condition)
 
-    caption = f"<b>Инвентарь</b>\n<i>Предмет {index + 1}/{user_skins_len}</i>\n\n{caption}"
+    caption = f"<b>Инвентарь 🗄️</b>\n<i>Предмет {index + 1}/{user_skins_len}</i>\n\n{caption}"
     kb = {}
 
     if index > 0:

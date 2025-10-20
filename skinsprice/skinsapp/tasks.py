@@ -80,6 +80,7 @@ async def process_skins():
                             lowest_price_str = "".join(parts[:-1]) + "." + parts[-1]
 
                         try:
+                            lowest_price_str = lowest_price_str.replace("$", "").replace(",", "")
                             lowest_price = float(lowest_price_str)
                         except ValueError:
                             print(f"[ERROR] Некорректный формат цены: {lowest_price_str}")

@@ -75,7 +75,15 @@ async def process_skins():
                     try:
                         last_price = await sync_to_async(lambda: float(us.last_notified_price or 0))()
                         lowest_price_str = data.get("lowest_price") or "0"
-                        lowest_price = float(lowest_price_str.replace("$", "").replace(",", "."))
+                        parts = lowest_price_str.split(".")
+                        if len(parts) > 2:
+                            lowest_price_str = "".join(parts[:-1]) + "." + parts[-1]
+
+                        try:
+                            lowest_price = float(lowest_price_str)
+                        except ValueError:
+                            print(f"[ERROR] Некорректный формат цены: {lowest_price_str}")
+                            return
 
                     except Exception as e:
                         print(f"[ERROR] Не удалось получить цену для {skin.skin_name}: {e}")

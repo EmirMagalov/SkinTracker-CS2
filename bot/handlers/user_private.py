@@ -44,7 +44,7 @@ async def build_skin_message(user_id, skin, condition=None):
 
     kb = {}
     if not user_skin:
-        kb['Следить 🔎'] = f'track|{skin["skin_id"]}|{skins_price.get("lowest_price")}|{condition}'
+        kb['Добавить в инвентарь ✚'] = f'add|{skin["skin_id"]}|{skins_price.get("lowest_price")}|{condition}'
 
     kb[f'Инвентарь ⚙️'] = 'inventory_0'
     if condition:
@@ -184,8 +184,8 @@ async def skins_found(call: types.CallbackQuery):
                                         parse_mode='HTML')
 
 
-@user_private_router.callback_query(F.data.startswith('track'))
-async def skins_track(call: types.CallbackQuery):
+@user_private_router.callback_query(F.data.startswith('add'))
+async def skins_add(call: types.CallbackQuery):
     user_id = call.from_user.id
     skincalldata = call.data.split('|')
     skin_id = skincalldata[1]

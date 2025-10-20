@@ -1,0 +1,106 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+*.egg
+*.log
+*.pot
+*.pyc
+*.pkl
+*.sqlite3
+*.db
+
+# ---- Environment / Secrets ----
+.env
+*.env
+.env.*
+secrets.json
+
+# ---- Virtual environments ----
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+Pipfile.lock
+poetry.lock
+
+# ---- Django ----
+*.mo
+*.pot
+db.sqlite3
+/media/
+staticfiles/
+static_root/
+tmp/
+*.log
+
+# Django cache / celery beat DB
+celerybeat-schedule
+celerybeat.pid
+
+# ---- Aiogram ----
+bot/__pycache__/
+bot/*.session*
+bot/*.session-journal
+bot/logs/
+bot/data/
+bot/cache/
+
+# ---- VSCode / IDE ----
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ---- System files ----
+.DS_Store
+Thumbs.db
+
+# ---- Docker ----
+/docker-compose.override.yml
+/docker-compose.local.yml
+*.pid
+*.tar
+*.bak
+*.backup
+*.tmp
+*.swp
+
+# ---- Redis / Postgres data ----
+/data/
+/redis_data/
+/pg_data/
+/db_data/
+/volumes/
+
+# ---- Migrations (если не хочешь коммитить автоматически) ----
+# **Но лучше их коммитить!**
+# */migrations/
+
+# ---- Nginx / Deploy ----
+/deploy/nginx/certs/
+/deploy/nginx/conf.d/*.bak
+/deploy/nginx/logs/
+
+# ---- Tests / Coverage ----
+.coverage
+htmlcov/
+.tox/
+.nox/
+pytest_cache/
+*.cover
+*.coverage
+test_results/
+
+# ---- Misc ----
+*.iml
+*.bak
+*.orig
+*.swp
+*.swo
+*.tmp
+*.log

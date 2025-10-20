@@ -43,9 +43,9 @@ services:
   #  postgres_data:
   #  media:
   celery:
-    build: .
-    #        context: .
-    #        dockerfile: Dockerfile-django
+    build:
+      context: .
+      dockerfile: Dockerfile-django
     #    command: bash -c "celery -A taskmanager purge --force  && celery -A taskmanager worker --loglevel=info"
     command: celery -A taskmanager worker --loglevel=info
     depends_on:
@@ -57,9 +57,9 @@ services:
     restart: always
 
   beat:
-    build: .
-    #      context: .
-    #      dockerfile: Dockerfile-django
+    build:
+      context: .
+      dockerfile: Dockerfile-django
     command: celery -A taskmanager beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     depends_on:
       - redis

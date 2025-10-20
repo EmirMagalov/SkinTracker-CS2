@@ -1,6 +1,6 @@
 FROM python:3.10.9
 
-COPY /skinprice /django_app
+COPY ./skinprice /django_app
 
 WORKDIR /django_app
 

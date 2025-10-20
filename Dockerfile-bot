@@ -1,6 +1,6 @@
 FROM python:3.10.9
 
-COPY /bot /bot_app
+COPY ./bot /bot_app
 
 WORKDIR /bot_app
 

@@ -15,7 +15,7 @@ services:
 #        dockerfile: Dockerfile-django
       command: python manage.py runserver 0.0.0.0:8000
       volumes:
-        - /skinsprice:/django_app
+        - ./skinsprice:/django_app
 #        - media:/app/media
       ports:
         - "8000:8000"
@@ -33,7 +33,7 @@ services:
 #      context: .
 #      dockerfile: Dockerfile-bot
     volumes:
-      - /bot:/app
+      - ./bot:/app
     working_dir: /bot_app
 #    depends_on:
 #      - db
@@ -51,7 +51,7 @@ services:
       depends_on:
         - redis
       volumes:
-        - ./taskmanager:/app
+        - ./skinsprice:/django_app
       env_file: .env
 
       restart: always
@@ -65,7 +65,7 @@ services:
       - redis
       - django
     volumes:
-      - ./taskmanager:/app
+      - ./skinsprice:/django_app
     env_file: .env
     restart: always
 

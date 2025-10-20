@@ -18,12 +18,15 @@ async def build_skin_message(user_id, skin, condition=None):
 
     if condition in ('None', 'none'):
         condition = None
+
+    rarity = f'\n\n<u>{skin["rarity"]}</u>' if skin["rarity"].lower() !='none' else ''
+
     if condition:
         condition_show_name = lang["ru"].get(condition, condition)
         url_name = f'{skin["req_name"]} ({condition})'
-        full_name = f'<b>{skin["show_name"]} ({condition_show_name})</b>\n\n<u>{skin["rarity"]}</u>'
+        full_name = f'<b>{skin["show_name"]} ({condition_show_name})</b>{rarity}'
     else:
-        full_name = f'<b>{skin["show_name"]}</b>\n\n<u>{skin["rarity"]}</u>'
+        full_name = f'<b>{skin["show_name"]}</b>{rarity}'
         url_name = f'{skin["req_name"]}'
 
     encoded_name = urllib.parse.quote(url_name)  # кодируем пробелы, скобки и спецсимволы

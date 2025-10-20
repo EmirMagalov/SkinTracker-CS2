@@ -128,7 +128,7 @@ async def get_skin(skin_id, lang):
         "req_name": clean_name_for_request,
         "show_name": clean_name,
         "descr": descr,
-        "rarity": f"{rarity_translate[lang][rarity_en]}"
+        "rarity": f"{rarity_translate[lang].get(rarity_en)}"
     }
 
 

@@ -35,9 +35,10 @@ services:
     volumes:
       - ./bot:/bot_app
     working_dir: /bot_app
+
+    env_file: .env
     #    depends_on:
     #      - db
-    env_file: .env
 
   #volumes:
   #  postgres_data:

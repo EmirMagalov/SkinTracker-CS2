@@ -21,6 +21,8 @@ services:
       - "8000:8000"
     #      depends_on:
     #        - db
+    depends_on:
+      - redis
     env_file: .env
   #      environment:
   #        - DEBUG=1

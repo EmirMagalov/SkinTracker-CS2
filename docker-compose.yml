@@ -35,7 +35,8 @@ services:
     volumes:
       - ./bot:/bot_app
     working_dir: /bot_app
-
+    depends_on:
+      - redis
     env_file: .env
     #    depends_on:
     #      - db

@@ -14,7 +14,7 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("TOKEN")
 CACHE_TTL = 300  # 5 минут
-REDIS_HOST = "localhost"
+REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = 6379
 REDIS_DB = 0
 MAX_CONCURRENT_REQUESTS = 5  # ограничение параллельных запросов

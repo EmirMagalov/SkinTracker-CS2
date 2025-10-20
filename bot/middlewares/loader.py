@@ -3,8 +3,7 @@ from dotenv import load_dotenv
 import json
 from redis.asyncio import Redis
 load_dotenv()
-REDIS_URL = os.getenv("CELERY_BROKER_URL")  # должно быть типа redis://redis:6379/0
-redis = Redis.from_url(REDIS_URL)
+redis = Redis(host=os.getenv("REDIS_HOST"), port=6379, db=0)
 
 
 with open("all_skins_ru.json", encoding="utf-8") as f:

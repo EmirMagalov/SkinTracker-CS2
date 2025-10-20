@@ -80,8 +80,10 @@ async def process_skins():
                     except Exception as e:
                         print(f"[ERROR] Не удалось получить цену для {skin.skin_name}: {e}")
                         continue
-
-                    if us.threshold_value != 0 and abs(lowest_price - last_price) >= us.threshold_value:
+                    if last_price == 0:
+                        await sync_to_async(lambda: setattr(us, "last_notified_price", lowest_price) or us.save())()
+                        continue  # не отправляем уведомление
+                    if us.threshold_value != 0  and abs(lowest_price - last_price) >= us.threshold_value:
 
                         condition = f"({skin.condition})" if skin.condition else ''
                         text = f"💰 Цена на <b>{skin.skin_name} {condition}</b> изменилась!\n\nТекущая цена: {lowest_price}$"

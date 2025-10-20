@@ -1,6 +1,9 @@
+import os
+from dotenv import load_dotenv
 import json
 from redis.asyncio import Redis
-redis = Redis(host="localhost", port=6379, db=0)
+load_dotenv()
+redis = Redis(host=os.getenv("REDIS"), port=6379, db=0)
 
 
 with open("all_skins_ru.json", encoding="utf-8") as f:

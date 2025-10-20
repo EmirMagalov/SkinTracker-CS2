@@ -47,7 +47,7 @@ services:
       context: .
       dockerfile: Dockerfile-django
     #    command: bash -c "celery -A taskmanager purge --force  && celery -A taskmanager worker --loglevel=info"
-    command: celery -A taskmanager worker --loglevel=info
+    command: celery -A skinsprice worker --loglevel=info
     depends_on:
       - redis
     volumes:
@@ -60,7 +60,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-django
-    command: celery -A taskmanager beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    command: celery -A skinsprice beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     depends_on:
       - redis
       - django

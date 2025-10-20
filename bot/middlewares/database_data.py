@@ -1,9 +1,11 @@
+import os
 import json
 import aiohttp
 import urllib.parse
 from middlewares.loader import redis
-
-API = 'http://127.0.0.1:8000/api/'
+from dotenv import load_dotenv
+load_dotenv()
+API =os.getenv('URL')
 
 CACHE_TTL = 300  # 5 минут
 

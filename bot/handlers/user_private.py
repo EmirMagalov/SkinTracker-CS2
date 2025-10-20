@@ -236,7 +236,7 @@ async def inventory_show(user_id, index, call: types.CallbackQuery, delete=False
     caption, _ = await build_skin_message(user_id=user_id, skin=skin,
                                           condition=condition)
 
-    caption = f"<i>Предмет {index + 1}/{user_skins_len}</i>\n\n{caption}"
+    caption = f"<b>Инвентарь</b>\n<i>Предмет {index + 1}/{user_skins_len}</i>\n\n{caption}"
     kb = {}
 
     if index > 0:

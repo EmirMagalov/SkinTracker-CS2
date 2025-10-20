@@ -15,11 +15,10 @@ user_private_router = Router()
 
 
 async def build_skin_message(user_id, skin, condition=None):
-
     if condition in ('None', 'none'):
         condition = None
 
-    rarity = f'\n\n<u>{skin["rarity"]}</u>' if skin["rarity"].lower() !='none' else ''
+    rarity = f'\n\n<u>{skin["rarity"]}</u>' if skin["rarity"].lower() != 'none' else ''
 
     if condition:
         condition_show_name = lang["ru"].get(condition, condition)
@@ -37,7 +36,7 @@ async def build_skin_message(user_id, skin, condition=None):
     if skins_price.get('lowest_price') or skins_price.get('median_price'):
         mid_price = '\nСредняя цена - ' + str(skins_price.get('median_price')) + ' 📊'
         min_price = 'Мин. предложение - ' + skins_price.get('lowest_price') + ' 📉\n\n'
-        caption = f"{full_name}\n{mid_price if skins_price.get('median_price') else ''}\n{ min_price if skins_price.get('lowest_price') else ''}<a href='{url}'>Посмотреть в Steam</a>"
+        caption = f"{full_name}\n{mid_price if skins_price.get('median_price') else ''}\n{min_price if skins_price.get('lowest_price') else ''}<a href='{url}'>Посмотреть в Steam</a>"
     else:
         caption = f"{full_name}\n\nЭтот предмет никто не продает\n\n<a href='{url}'>Посмотреть в Steam</a>"
 
@@ -287,7 +286,7 @@ async def delete_skin(call: types.CallbackQuery):
 @user_private_router.callback_query(F.data.startswith('go_to'))
 async def go_to(call: types.CallbackQuery):
     user_id = call.from_user.id
-    skin_name = call.data.split('|')[-1]
+    skin_name = call.data.split(',')[-1]
     await skin_show(user_id, skin_name, call)
 
 
@@ -342,7 +341,7 @@ async def settings(call: types.CallbackQuery):
     kb['-'] = f'settings|{skin_id}|{condition}|{index}|minus'
     kb['+'] = f'settings|{skin_id}|{condition}|{index}|plus'
     if condition.lower() != 'none':
-        kb['Перейти↗️'] = f'go_to|{skin["req_name"]}'
+        kb['Перейти↗️'] = f'go_to,{skin["req_name"]}'
 
     kb['Удалить 🗑️'] = f'delete|{skin_id}|{condition}'
     kb['Назад'] = f'inventory_{index}'

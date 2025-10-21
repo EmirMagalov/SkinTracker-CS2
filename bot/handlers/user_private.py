@@ -104,7 +104,7 @@ async def skin_show(user_id, skin_name, event: Union[types.Message, types.Callba
             if isinstance(event, types.Message):
                 await message.answer_photo(skin['image'], caption=f"{caption}\n\n{url}",
                                            reply_markup=kb, parse_mode='HTML')
-                await message.delete()
+                # await message.delete()
             elif isinstance(event, types.CallbackQuery):
                 await message.edit_caption(skin['image'], caption=caption,
                                            reply_markup=kb, parse_mode='HTML')
@@ -132,7 +132,7 @@ async def skin_show(user_id, skin_name, event: Union[types.Message, types.Callba
 
                                                reply_markup=create_inline_kb(kb),
                                                parse_mode='HTML')
-                    await message.delete()
+                    # await message.delete()
                 elif isinstance(event, types.CallbackQuery):
                     await message.edit_caption(skin['image'], caption=caption,
 

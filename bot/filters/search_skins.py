@@ -117,7 +117,7 @@ async def get_skin(skin_id, lang):
     descr = (descr or "").replace('\\r\\n', '\n').replace('\\n', '\n').replace("<br>", "\n")
     # rarity_data = skins_data.get('rarity')
     # rarity = rarity_data.get('name') if rarity_data else None
-    rarity_data_en =skins_data_en.get('rarity')
+    rarity_data_en = skins_data_en.get('rarity')
     rarity_en = rarity_data_en.get('name') if rarity_data_en else None
 
     # return type, image, clean_name_for_request, clean_name, descr
@@ -142,9 +142,8 @@ lang = {
     }
 }
 
-
-rarity_translate ={
-    'ru':{
+rarity_translate = {
+    'ru': {
         'Consumer Grade': '🤍Ширпотреб',  # ширпотреб
         'Industrial Grade': '🩵Промышленное какчество',  # промышленное какчество
         'Mil-Spec Grade': '💙Армейское качество',  # армейские
@@ -152,7 +151,8 @@ rarity_translate ={
         'Classified': '🩷Засекреченное ',  # засекреченное
         'Covert': '❤️Тайное',  # тайное
         'Extraordinary': '💛Редкое',  # крайне редкий предмет или контрабандное
-        'Contraband': '🧡Contraband'  # Контрабанда
+        'Contraband': '🧡Контрабандное'  # Контрабанда
+
     },
     'en': {
         'Consumer Grade': '🤍Consumer Grade',  # ширпотреб
@@ -162,18 +162,19 @@ rarity_translate ={
         'Classified': '🩷Classified ',  # засекреченное
         'Covert': '❤️Covert',  # тайное
         'Extraordinary': '💛Exceedingly Rare',  # крайне редкий предмет или контрабандное
-        'Contraband': '🧡Контрабандное'  # Контрабанда
+        'Contraband': '🧡Contraband'  # Контрабанда
+
     }
 }
 
 rarity_color = {
-        'Consumer Grade':'',#ширпотреб
-        'Industrial Grade':'',#промышленное какчество
-        'Mil-Spec Grade':'', #армейские
-        'Restricted':'',#запрещенное
-        'Classified':'',#засекреченное
-        'Covert':'',#тайное
-        'Extraordinary':'',#крайне редкий предмет или контрабандное
-        'Contraband':''#Контрабанда
+    'Consumer Grade': '',  # ширпотреб
+    'Industrial Grade': '',  # промышленное какчество
+    'Mil-Spec Grade': '',  # армейские
+    'Restricted': '',  # запрещенное
+    'Classified': '',  # засекреченное
+    'Covert': '',  # тайное
+    'Extraordinary': '',  # крайне редкий предмет или контрабандное
+    'Contraband': ''  # Контрабанда
 
-    }
+}

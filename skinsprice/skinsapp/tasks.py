@@ -1,5 +1,7 @@
 import os
+import logging
 import json
+import re
 import urllib.parse
 import asyncio
 import aiohttp
@@ -9,8 +11,19 @@ from dotenv import load_dotenv
 from asgiref.sync import sync_to_async
 from redis.asyncio import Redis
 from .models import Skin, UserSkin
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import InlineKeyboardButton
 
 load_dotenv()
+logging.basicConfig(
+    level=logging.INFO,  # или DEBUG
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[
+        logging.StreamHandler(),  # вывод в консоль
+        logging.FileHandler("skins_checker.log", encoding="utf-8")  # лог в файл
+    ]
+)
+logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.getenv("TOKEN")
 CACHE_TTL = 300  # 5 минут
@@ -18,6 +31,15 @@ REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = 6379
 REDIS_DB = 0
 MAX_CONCURRENT_REQUESTS = 5  # ограничение параллельных запросов
+
+
+def create_inline_kb(data: dict[str, str], row1=1, row2=1):
+    inline_kb = InlineKeyboardBuilder()
+    for text, callback in data.items():
+        inline_kb.add(InlineKeyboardButton(text=text, callback_data=callback))
+    inline_kb.adjust(row1, row2)
+
+    return inline_kb.as_markup()
 
 
 async def get_skin_price(skin_name, condition=None, session=None):
@@ -51,7 +73,7 @@ async def process_skins():
     """Асинхронная проверка цен и уведомление пользователей."""
     skins = await sync_to_async(list)(Skin.objects.all())
     if not skins:
-        print("[INFO] Нет скинов в базе")
+        logger.info("[INFO] Нет скинов в базе")
         return
 
     bot = Bot(token=BOT_TOKEN)
@@ -62,13 +84,14 @@ async def process_skins():
         async def fetch_and_notify(skin):
             async with semaphore:
                 data = await get_skin_price(skin.skin_name, skin.condition, session=session)
+
                 if not data:
-                    print(f"[WARN] Нет данных для {skin.skin_name} ({skin.condition})")
+                    logger.info(f"[WARN] Нет данных для {skin.skin_name} ({skin.condition})")
                     return
 
                 user_skins = await sync_to_async(list)(UserSkin.objects.filter(skin=skin))
                 if not user_skins:
-                    print(f"[INFO] Нет подписчиков на {skin.skin_name}")
+                    logger.info(f"[INFO] Нет подписчиков на {skin.skin_name}")
                     return
 
                 for us in user_skins:
@@ -87,21 +110,25 @@ async def process_skins():
                             return
 
                     except Exception as e:
-                        print(f"[ERROR] Не удалось получить цену для {skin.skin_name}: {e}")
+                        logger.info(f"[ERROR] Не удалось получить цену для {skin.skin_name}: {e}")
                         continue
                     if last_price == 0:
+                        print(last_price)
+                        print(lowest_price)
                         await sync_to_async(lambda: setattr(us, "last_notified_price", lowest_price) or us.save())()
                         continue  # не отправляем уведомление
-                    if us.threshold_value != 0  and abs(lowest_price - last_price) >= us.threshold_value:
+                    if us.threshold_value != 0 and abs(lowest_price - last_price) >= us.threshold_value:
 
                         condition = f"({skin.condition})" if skin.condition else ''
-                        text = f"💰 Цена на <b>{skin.skin_name} {condition}</b> изменилась!\n\nТекущая цена: {lowest_price}$"
+                        skin_name = re.sub(r"★|\s*\(.*?\)", "", skin.skin_name).strip()
+                        text = f"💰 Цена на <b>{skin_name} {condition}</b> изменилась!\n\nТекущая цена: {lowest_price}$"
                         try:
                             user_id = await sync_to_async(lambda: us.user.user_id)()
-                            await bot.send_message(user_id, text, parse_mode="HTML")
-                            print(f"[INFO] Отправлено пользователю {user_id}")
+                            await bot.send_message(user_id, text, reply_markup=create_inline_kb(
+                                {'Перейти↗️': f'skincalldata|{skin.skin_id}|{skin.condition}'}), parse_mode="HTML")
+                            logger.info(f"[INFO] Отправлено пользователю {user_id}")
                         except Exception as e:
-                            print(f"[ERROR] Не удалось отправить пользователю {user_id}: {e}")
+                            logger.info(f"[ERROR] Не удалось отправить пользователю {user_id}: {e}")
                             continue
                         skin.last_price = lowest_price
                         await sync_to_async(skin.save)()

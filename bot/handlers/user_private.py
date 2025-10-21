@@ -1,3 +1,4 @@
+import re
 import urllib.parse
 from typing import Union
 
@@ -168,20 +169,23 @@ async def skins_found(call: types.CallbackQuery):
 
     skin = await get_skin(skin_id, 'ru')
 
-    skins_price = await get_skin_price(skin["req_name"], condition)
+    # skins_price = await get_skin_price(skin["req_name"], condition)
 
     caption, kb = await build_skin_message(user_id=user_id, skin=skin,
                                            condition=condition)
-    if skins_price.get('lowest_price') or skins_price.get('median_price'):
+    try:
         await call.message.edit_caption(caption=
                                         caption,
                                         reply_markup=create_inline_kb(kb),
                                         parse_mode='HTML')
-    else:
-        await call.message.edit_caption(caption=
-                                        caption,
-                                        reply_markup=create_inline_kb(kb),
-                                        parse_mode='HTML')
+    except:
+        await call.message.edit_media(media=InputMediaPhoto(
+            media=skin['image'],
+            caption=caption,
+            parse_mode="HTML"
+        ),
+            reply_markup=create_inline_kb(kb),
+        )
 
 
 @user_private_router.callback_query(F.data.startswith('add'))
@@ -203,7 +207,8 @@ async def skins_add(call: types.CallbackQuery):
         print("Ошибка конвертации цены:", e)
         lowest_price_decimal = None
 
-    await add_user_skin(user_id, skin_id, skin["req_name"], lowest_price_decimal, condition)
+    await add_user_skin(user_id, skin_id, skin["req_name"], lowest_price_decimal,
+                        condition)
 
     await call.answer("Педмет добавлен в инвентарь!", show_alert=True)
     caption, kb = await build_skin_message(user_id=user_id, skin=skin, condition=condition

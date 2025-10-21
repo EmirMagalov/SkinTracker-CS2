@@ -4,10 +4,13 @@ from aiogram import Bot, Dispatcher, types
 from dotenv import load_dotenv
 from handlers.user_private import user_private_router
 from kbds.commands import private
+from handlers.admin import admin_private
 load_dotenv()
 bot = Bot(token=os.getenv('TOKEN'))
 dp = Dispatcher()
+dp.include_router(admin_private)
 dp.include_router(user_private_router)
+
 
 
 def start_bot():

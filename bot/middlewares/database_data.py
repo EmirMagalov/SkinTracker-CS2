@@ -98,3 +98,13 @@ async def user_skin_trigger(user_id, skin_id, condition, threshold_value):
                 return await response.json()
             else:
                 return None
+
+
+async def get_users():
+    async with aiohttp.ClientSession() as session:
+        async with session.get(API + 'users'
+                               ) as response:
+            if response.status == 200:
+                return await response.json()
+            else:
+                return None

@@ -88,12 +88,12 @@ async def delete_user_skin(user_id, skin_id, condition):
                 return None
 
 
-async def user_skin_trigger(user_id, skin_id, condition, threshold_value):
+async def user_skin_trigger(user_id, skin_id, condition, threshold_value,last_price):
     async with aiohttp.ClientSession() as session:
         async with session.post(API + 'user-skins/user_skin_trigger/',
                                 json={'user_id': user_id, 'skin_id': skin_id,
                                       'threshold_value': threshold_value,
-                                      "condition": condition}) as response:
+                                      "condition": condition,'last_price':last_price}) as response:
             if response.status == 200:
                 return await response.json()
             else:

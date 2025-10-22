@@ -1,10 +1,12 @@
 import re
 import urllib.parse
 from typing import Union
+from decimal import Decimal
 
-from _decimal import Decimal
 from aiogram import Router, F, types
+from aiogram.filters import or_f
 from aiogram.filters import Command, CommandStart
+from aiogram.fsm.context import FSMContext
 from aiogram.types import InputMediaPhoto
 
 from filters.search_skins import get_skin_id, get_skin, lang
@@ -19,14 +21,14 @@ async def build_skin_message(user_id, skin, condition=None):
     if condition in ('None', 'none'):
         condition = None
 
-    rarity = f'\n\n<u>{skin["rarity"]}</u>' if skin["rarity"].lower() != 'none' else ''
+    rarity = f'\n\n{skin["rarity"]}' if skin["rarity"].lower() != 'none' else ''
 
     if condition:
         condition_show_name = lang["ru"].get(condition, condition)
         url_name = f'{skin["req_name"]} ({condition})'
-        full_name = f'<b>{skin["show_name"]} ({condition_show_name})</b>{rarity}'
+        full_name = f'<u><b>{skin["show_name"]} ({condition_show_name})</b></u>{rarity}'
     else:
-        full_name = f'<b>{skin["show_name"]}</b>{rarity}'
+        full_name = f'<u><b>{skin["show_name"]}</b></u>{rarity}'
         url_name = f'{skin["req_name"]}'
 
     encoded_name = urllib.parse.quote(url_name)  # кодируем пробелы, скобки и спецсимволы
@@ -50,11 +52,11 @@ async def build_skin_message(user_id, skin, condition=None):
     kb[f'Инвентарь 🗄️'] = 'inventory_0'
     if condition:
         kb['Назад'] = f'back|{skin["skin_id"]}'
-    return caption, kb
+    return caption, kb, skins_price.get('lowest_price') if skins_price.get('lowest_price') else '0.00'
 
 
 async def search_text(skin):
-    caption = f"<b>{skin['show_name']}</b>\n\n<u>{skin['rarity']}</u>\n\n{skin['descr']}"
+    caption = f"<u><b>{skin['show_name']}</b></u>\n\n{skin['rarity']}\n\n{skin['descr']}"
 
     kb = condition_kbds(skin['skin_id'], )
     return caption, kb
@@ -113,8 +115,8 @@ async def skin_show(user_id, skin_name, event: Union[types.Message, types.Callba
         else:
             skins_price = await get_skin_price(skin['req_name'])
 
-            caption, kb = await build_skin_message(user_id=user_id, skin=skin,
-                                                   )
+            caption, kb, _ = await build_skin_message(user_id=user_id, skin=skin,
+                                                      )
             if skins_price.get('lowest_price') or skins_price.get('median_price'):
                 if isinstance(event, types.Message):
                     await message.answer_photo(skin['image'], caption=caption,
@@ -161,7 +163,7 @@ async def back(call: types.CallbackQuery):
 
 
 @user_private_router.callback_query(F.data.startswith('skincalldata|'))
-async def skins_found(call: types.CallbackQuery):
+async def skincalldata(call: types.CallbackQuery):
     user_id = call.from_user.id
     skincalldata = call.data.split('|')
     skin_id = skincalldata[1]
@@ -171,8 +173,8 @@ async def skins_found(call: types.CallbackQuery):
 
     # skins_price = await get_skin_price(skin["req_name"], condition)
 
-    caption, kb = await build_skin_message(user_id=user_id, skin=skin,
-                                           condition=condition)
+    caption, kb, _ = await build_skin_message(user_id=user_id, skin=skin,
+                                              condition=condition)
     try:
         await call.message.edit_caption(caption=
                                         caption,
@@ -205,14 +207,14 @@ async def skins_add(call: types.CallbackQuery):
         lowest_price_decimal = float(Decimal(price_clean))
     except Exception as e:
         print("Ошибка конвертации цены:", e)
-        lowest_price_decimal = None
+        lowest_price_decimal = '0.00'
 
     await add_user_skin(user_id, skin_id, skin["req_name"], lowest_price_decimal,
                         condition)
 
     await call.answer("Педмет добавлен в инвентарь!", show_alert=True)
-    caption, kb = await build_skin_message(user_id=user_id, skin=skin, condition=condition
-                                           )
+    caption, kb, _ = await build_skin_message(user_id=user_id, skin=skin, condition=condition
+                                              )
 
     await call.message.edit_caption(caption=caption,
                                     reply_markup=create_inline_kb(kb),
@@ -232,14 +234,16 @@ async def inventory_show(user_id, index, call: types.CallbackQuery, delete=False
             await call.answer("Инвентарь пустой!", show_alert=True)
             await call.answer()
         return
-
-    user_skins = user_skins[index]
+    try:
+        user_skins = user_skins[index]
+    except:
+        user_skins = user_skins[0]
     skin_id = user_skins['skin_id']
     condition = user_skins['condition']
     skin = await get_skin(skin_id, 'ru')
 
-    caption, _ = await build_skin_message(user_id=user_id, skin=skin,
-                                          condition=condition)
+    caption, _, _ = await build_skin_message(user_id=user_id, skin=skin,
+                                             condition=condition)
 
     caption = f"<b>Инвентарь 🗄️</b>\n<i>Предмет {index + 1}/{user_skins_len}</i>\n\n{caption}"
     kb = {}
@@ -283,7 +287,7 @@ async def delete_skin(call: types.CallbackQuery):
     await delete_user_skin(user_id, skin_id, condition)
     skin = await get_skin(skin_id, 'ru')
 
-    caption, _ = await build_skin_message(user_id=user_id, skin=skin, condition=condition)
+    caption, _, _ = await build_skin_message(user_id=user_id, skin=skin, condition=condition)
     index = 0
     await inventory_show(user_id, index, call, delete=True)
 
@@ -295,20 +299,33 @@ async def go_to(call: types.CallbackQuery):
     await skin_show(user_id, skin_name, call)
 
 
-@user_private_router.callback_query(F.data.startswith('settings'))
-async def settings(call: types.CallbackQuery):
+@user_private_router.callback_query(
+    or_f(F.data.startswith('settings'), (F.data.startswith('increase_by')), (F.data.startswith('price'))))
+async def settings(call: types.CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
     skincalldata = call.data.split('|')
     skin_id = skincalldata[1]
     condition = skincalldata[2]
     index = skincalldata[3]
-    try:
-        action = skincalldata[4]
-    except IndexError:
-        action = None  # или 0
+
+    increase_by = [0.10, 1, 5, 10, 50, 100]
+    data = await state.get_data()
+    current_index = data.get("increase_by_index", 1)
+    if call.data.startswith('increase_by'):
+        calldata = call.data.split('|')
+        value = calldata[4]
+        print(value)
+        if value == 'plus':
+            current_index = (current_index + 1) % len(increase_by)
+        elif value == 'minus':
+            current_index = (current_index - 1) % len(increase_by)
+
+    new_value = increase_by[current_index]
+
+    await state.update_data(increase_by_index=current_index)
     skin = await get_skin(skin_id, 'ru')
-    caption, _ = await build_skin_message(user_id=user_id, skin=skin,
-                                          condition=condition)
+    caption, _, last_price = await build_skin_message(user_id=user_id, skin=skin,
+                                                      condition=condition)
     user_skins = await get_user_skins(user_id)
     user_skin = next(
         (
@@ -321,36 +338,52 @@ async def settings(call: types.CallbackQuery):
         await call.answer("Предмет не найден.", show_alert=True)
         return
 
-    non_zero_threshold = [s for s in user_skins if s["threshold_value"] > 0]
+    non_zero_threshold = [s for s in user_skins if Decimal(s["threshold_value"]) > Decimal('0.00')]
     count = len(non_zero_threshold)
 
-    current = user_skin['threshold_value'] or 0
-    if action and action == 'plus':
-        if count < 5:
-            if current == 0:
-                count += 1
-            current += 5
+    current = Decimal(user_skin['threshold_value'] or '0.00')
 
-        else:
-            await call.answer('Нельзя отслеживать больше 5 предметов!', show_alert=True)
-    elif action and action == 'minus':
-        current = max(0, current - 5)
-        if current == 0:
-            count -= 1
-    await user_skin_trigger(user_id, skin_id, condition, current)
-    current = f"Отслеживать изменение цены на <b>{current}$</b>" if current else 'Для отслеживание цены нажмите на <b>"+"</b>'
-    caption = f"{caption}\n\nОтслеживаемых предметов <b>({count})</b>\n\n{current}"
+    if call.data.startswith('price'):
+        calldata = call.data.split('|')
+
+        action = calldata[4]
+
+        if action and action == 'plus':
+            if count < 5:
+
+                if current == 0:
+                    count += 1
+                current += Decimal(new_value)
+
+            else:
+                await call.answer('Нельзя отслеживать больше 5 предметов!', show_alert=True)
+        elif action and action == 'minus':
+            current = max(Decimal('0.00'), current - Decimal(str(new_value)))
+            if current == 0:
+                count -= 1
+        await user_skin_trigger(user_id, skin_id, condition, str(current),
+                                str(last_price.replace("$", "").replace(",", "")))
+    current = f"Отслеживать изменение цены на <b>{current:.2f}$</b>" if current else 'Для отслеживание цены нажмите на <b>"+"</b>'
+    caption = f"<b>Настройки 🛠️</b>\n\n{caption}\n\nОтслеживаемых предметов <b>({count})</b>\n\n{current}"
     kb = {}
     #
 
-    kb['-'] = f'settings|{skin_id}|{condition}|{index}|minus'
-    kb['+'] = f'settings|{skin_id}|{condition}|{index}|plus'
+    kb['-'] = f'price|{skin_id}|{condition}|{index}|minus'
+    kb['+'] = f'price|{skin_id}|{condition}|{index}|plus'
+    kb['<'] = f'increase_by|{skin_id}|{condition}|{index}|minus'
+    kb[f'Шаг {new_value:.2f}$'] = 'None'
+    kb['>'] = f'increase_by|{skin_id}|{condition}|{index}|plus'
+
     if condition.lower() != 'none':
         kb['Перейти↗️'] = f'go_to,{skin["req_name"]}'
-
     kb['Удалить 🗑️'] = f'delete|{skin_id}|{condition}'
     kb['Назад'] = f'inventory_{index}'
     try:
         await call.message.edit_caption(caption=caption, reply_markup=create_inline_kb(kb, 2, 1), parse_mode="HTML")
     except:
         await call.answer()
+
+
+@user_private_router.callback_query(F.data == 'None')
+async def none(call: types.CallbackQuery):
+    await call.answer()

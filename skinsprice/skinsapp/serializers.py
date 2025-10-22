@@ -24,4 +24,4 @@ class UserSkinSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserSkin
-        fields = ('id', 'user', 'skin', 'skin_id', 'threshold_value','condition', 'last_notified_price')
+        fields = ('id', 'user', 'skin', 'skin_id', 'threshold_value', 'condition', 'last_notified_price')

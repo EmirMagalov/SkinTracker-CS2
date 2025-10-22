@@ -2,6 +2,7 @@ import os
 import logging
 import json
 import re
+from decimal import Decimal
 import urllib.parse
 import asyncio
 import aiohttp
@@ -96,7 +97,7 @@ async def process_skins():
 
                 for us in user_skins:
                     try:
-                        last_price = await sync_to_async(lambda: float(us.last_notified_price or 0))()
+                        last_price = await sync_to_async(lambda: Decimal(str(us.last_notified_price or '0.00')))()
                         lowest_price_str = data.get("lowest_price") or "0"
                         parts = lowest_price_str.split(".")
                         if len(parts) > 2:
@@ -104,7 +105,7 @@ async def process_skins():
 
                         try:
                             lowest_price_str = lowest_price_str.replace("$", "").replace(",", "")
-                            lowest_price = float(lowest_price_str)
+                            lowest_price = Decimal(lowest_price_str)
                         except ValueError:
                             print(f"[ERROR] Некорректный формат цены: {lowest_price_str}")
                             return
@@ -112,16 +113,17 @@ async def process_skins():
                     except Exception as e:
                         logger.info(f"[ERROR] Не удалось получить цену для {skin.skin_name}: {e}")
                         continue
-                    if last_price == 0:
-                        print(last_price)
-                        print(lowest_price)
-                        await sync_to_async(lambda: setattr(us, "last_notified_price", lowest_price) or us.save())()
-                        continue  # не отправляем уведомление
-                    if us.threshold_value != 0 and abs(lowest_price - last_price) >= us.threshold_value:
+                    # if last_price == 0:
+                    #     print(last_price)
+                    #     print(lowest_price)
+                    #     await sync_to_async(lambda: setattr(us, "last_notified_price", lowest_price) or us.save())()
+                    #     continue  # не отправляем уведомление
+                    if us.threshold_value != Decimal('0.00') and abs(lowest_price - last_price) >= Decimal(
+                            us.threshold_value):
 
                         condition = f"({skin.condition})" if skin.condition else ''
                         skin_name = re.sub(r"★|\s*\(.*?\)", "", skin.skin_name).strip()
-                        text = f"💰 Цена на <b>{skin_name} {condition}</b> изменилась!\n\nТекущая цена: {lowest_price}$"
+                        text = f"💰 Цена на <b>{skin_name} {condition}</b> изменилась!\n\nПредыдущая цена: {last_price:.2f}$\nТекущая цена: {lowest_price}$"
                         try:
                             user_id = await sync_to_async(lambda: us.user.user_id)()
                             await bot.send_message(user_id, text, reply_markup=create_inline_kb(

@@ -30,8 +30,8 @@ class UserSkinViewSet(viewsets.ModelViewSet):
         skin_name = request.data.get('skin_name')
         last_price = request.data.get('last_price')
         condition = request.data.get('condition')
-        skin, create = Skin.objects.get_or_create(skin_id=skin_id, skin_name=skin_name,condition=condition,
-                                                  defaults={'last_price': last_price})
+        skin, create = Skin.objects.get_or_create(skin_id=skin_id, skin_name=skin_name, condition=condition,
+                                                  last_price=last_price)
         if last_price is not None:
             skin.last_price = last_price
             skin.save()
@@ -77,7 +77,9 @@ class UserSkinViewSet(viewsets.ModelViewSet):
         user_id = request.data.get("user_id")
         skin_id = request.data.get('skin_id')
         condition = request.data.get('condition')
-        threshold_value = int(request.data.get('threshold_value'))
+        threshold_value = request.data.get('threshold_value')
+        last_price = request.data.get('last_price')
+        print(last_price)
         # Приводим строку "None" или пустую строку к настоящему None
         if not condition or condition.lower() == 'none':
             condition = None
@@ -91,9 +93,9 @@ class UserSkinViewSet(viewsets.ModelViewSet):
 
         user_skin = UserSkin.objects.get(user=user, skin=skin)
         user_skin.threshold_value = threshold_value
+        user_skin.last_notified_price = last_price
         user_skin.save()
         return Response({"success": True, "user_skin_id": user_skin.id})
-
 
     @action(methods=['delete'], detail=False)
     def delete_user_skin(self, request):

@@ -41,6 +41,6 @@ def create_inline_kb(data: dict[str, str],row1=1,row2=1):
     inline_kb = InlineKeyboardBuilder()
     for text, callback in data.items():
         inline_kb.add(InlineKeyboardButton(text=text, callback_data=callback))
-    inline_kb.adjust(row1,row2)
+    inline_kb.adjust(2,3,1)
 
     return inline_kb.as_markup()

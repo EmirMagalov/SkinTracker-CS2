@@ -258,7 +258,7 @@ async def inventory_show(user_id, index, call: types.CallbackQuery, delete=False
     try:
         await call.message.edit_media(
             media=InputMediaPhoto(media=skin['image'], caption=caption, parse_mode='HTML'),
-            reply_markup=create_inline_kb(kb, row1=2 if len(kb) >= 3 else 1)
+            reply_markup=create_inline_kb(kb, 2 if len(kb) >= 3 else 1)
         )
     except Exception as e:
         print("Ошибка при обновлении медиа:", e)
@@ -379,7 +379,7 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
     kb['Удалить 🗑️'] = f'delete|{skin_id}|{condition}'
     kb['Назад'] = f'inventory_{index}'
     try:
-        await call.message.edit_caption(caption=caption, reply_markup=create_inline_kb(kb, 2, 1), parse_mode="HTML")
+        await call.message.edit_caption(caption=caption, reply_markup=create_inline_kb(kb, 2, 3, 1), parse_mode="HTML")
     except:
         await call.answer()
 

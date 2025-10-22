@@ -37,10 +37,14 @@ def condition_kbds(skin_id: str):
     return builder.as_markup()
 
 
-def create_inline_kb(data: dict[str, str],row1=1,row2=1):
+def create_inline_kb(data: dict[str, str], *row):
     inline_kb = InlineKeyboardBuilder()
     for text, callback in data.items():
         inline_kb.add(InlineKeyboardButton(text=text, callback_data=callback))
-    inline_kb.adjust(2,3,1)
 
+    # если row не передано, используем значение по умолчанию
+    if not row:
+        row = (1,)  # например, по 2 кнопки в ряд
+
+    inline_kb.adjust(*row)
     return inline_kb.as_markup()

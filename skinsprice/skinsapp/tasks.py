@@ -43,9 +43,9 @@ def create_inline_kb(data: dict[str, str], row1=1, row2=1):
     return inline_kb.as_markup()
 
 
-async def get_skin_price(skin_name, condition=None, session=None):
+async def get_skin_price(skin_name, condition, session=None):
     """Получаем цену скина из Steam с кэшированием в Redis."""
-    if condition:
+    if condition!='Collections':
         full_name = f"{skin_name} ({condition})"
     else:
         full_name = skin_name

@@ -26,18 +26,27 @@ class UserSkinViewSet(viewsets.ModelViewSet):
     @action(methods=["post"], detail=False)
     def add_user_skin(self, request):
         user_id = request.data.get("user_id")
-        skin_id = request.data.get('skin_id')
-        skin_name = request.data.get('skin_name')
-        last_price = request.data.get('last_price')
-        condition = request.data.get('condition')
-        skin, create = Skin.objects.get_or_create(skin_id=skin_id, skin_name=skin_name, condition=condition,
-                                                  last_price=last_price)
-        if last_price is not None:
-            skin.last_price = last_price
-            skin.save()
+        skin_id = request.data.get("skin_id")
+        skin_name = request.data.get("skin_name")
+        last_price = request.data.get("last_price")
+        condition = request.data.get("condition")
+
+        # Создаем или обновляем Skin
+        skin, skin_created = Skin.objects.update_or_create(
+            skin_id=skin_id,
+            condition=condition,
+            defaults={
+                "skin_name": skin_name,
+                "last_price": last_price
+            }
+        )
+
+        # Получаем пользователя
         user = BotUser.objects.get(user_id=user_id)
 
-        user_skin, create = UserSkin.objects.get_or_create(user=user, skin=skin)
+        # Создаем или получаем подписку пользователя на скин
+        user_skin, user_skin_created = UserSkin.objects.get_or_create(user=user, skin=skin)
+
         serializer = UserSkinSerializer(user_skin)
         return Response(serializer.data)
 

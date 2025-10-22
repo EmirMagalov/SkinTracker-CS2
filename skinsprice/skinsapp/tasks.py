@@ -27,7 +27,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.getenv("TOKEN")
-CACHE_TTL = 300  # 5 минут
+CACHE_TTL = 180  # 5 минут
 REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = 6379
 REDIS_DB = 0

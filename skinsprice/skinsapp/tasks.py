@@ -121,7 +121,7 @@ async def process_skins():
                     if us.threshold_value != Decimal('0.00') and abs(lowest_price - last_price) >= Decimal(
                             us.threshold_value):
 
-                        condition = f"({skin.condition})" if skin.condition else ''
+                        condition = f"({skin.condition})" if skin.condition!="Collections" else ''
                         skin_name = re.sub(r"★|\s*\(.*?\)", "", skin.skin_name).strip()
                         text = f"💰 Цена на <b>{skin_name} {condition}</b> изменилась!\n\nПредыдущая цена: {last_price:.2f}$\nТекущая цена: {lowest_price}$"
                         try:

@@ -2,7 +2,7 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
-def condition_kbds(skin_id: str):
+def condition_kbds(skin_id: str,stattrak:bool = False):
     builder = InlineKeyboardBuilder()
     #'🟩'
     #'🟦'
@@ -23,7 +23,9 @@ def condition_kbds(skin_id: str):
             text=name,
             callback_data=f"skincalldata|{skin_id}|{condition}"
         )
-
+    if stattrak:
+        for name, condition in conditions.items():
+         builder.button(text=f'StatTrak™ {name}', callback_data=f"skincalldata|{skin_id}|{condition}|stattrak")
     builder.adjust(1)
 
     # Добавляем кнопку «Инвентарь»

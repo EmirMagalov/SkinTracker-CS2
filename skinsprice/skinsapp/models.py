@@ -14,7 +14,7 @@ class BotUser(models.Model):
 
 class Skin(models.Model):
     # name = models.CharField(max_length=255)
-    condition = models.CharField(max_length=255, null=True, blank=True)
+    condition = models.CharField(max_length=255, default='Collections')
     skin_id = models.CharField(max_length=255)
     skin_name = models.CharField(max_length=255)
     last_price = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
@@ -22,7 +22,7 @@ class Skin(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['skin_id', 'condition'], name='unique_skin_conditioыn')
+            models.UniqueConstraint(fields=['skin_id', 'condition'], name='unique_skin_condition')
         ]
 
     def __str__(self):

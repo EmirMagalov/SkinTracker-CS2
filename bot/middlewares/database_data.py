@@ -53,9 +53,8 @@ async def add_user_skin(user_id, skin_id, skin_name, last_price, condition):
                 return None
 
 
-async def get_user_skin(user_id, skin_id, condition=None):
+async def get_user_skin(user_id, skin_id, condition):
     params = {'user_id': str(user_id), 'skin_id': skin_id}
-
     if condition is not None:
         params['condition'] = str(condition)
 

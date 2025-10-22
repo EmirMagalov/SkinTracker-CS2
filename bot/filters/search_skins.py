@@ -1,3 +1,5 @@
+import html
+
 from middlewares.loader import skins_en, skins_ru
 from aiogram import types
 import re
@@ -15,6 +17,23 @@ def normalize(text: str) -> str:
     return text.strip()
 
 
+async def get_exact_name(search_name):
+    search_list = skins_en.values()
+    iterable = search_list.values() if isinstance(search_list, dict) else search_list
+    search_choices = []
+
+    # Нормализуем имя, которое ищем
+    norm_search_name = normalize(search_name)
+
+    for s in iterable:
+        skin_name = s.get("name", "")
+        norm_name = normalize(skin_name)
+        search_choices.append(norm_name)
+
+    if norm_search_name in search_choices:
+        return True
+    else:
+        return False
 # --- функция для поиска скина/кейса ---
 async def get_skin_id(skins_name: str, threshold=70):
     query = normalize(skins_name)
@@ -85,8 +104,17 @@ async def get_skin(skin_id, lang):
 
     descr = skins_data.get('description', '')
     image = skins_data.get('image')
+
     descr = (descr or "").replace('\\r\\n', '\n').replace('\\n', '\n').replace("<br>", "\n")
 
+    # Убираем все HTML-теги
+    descr = re.sub(r'<.*?>', '', descr)
+
+    # Экранируем специальные символы для безопасности
+    descr = html.escape(descr)
+    min_float = skins_data.get('min_float')
+    max_float = skins_data.get('max_float')
+    stattrak = skins_data.get('stattrak')
     rarity_data_en = skins_data_en.get('rarity')
     rarity_en = rarity_data_en.get('name') if rarity_data_en else None
     return {
@@ -96,7 +124,10 @@ async def get_skin(skin_id, lang):
         "req_name": clean_name_for_request,
         "show_name": clean_name,
         "descr": descr,
-        "rarity": f"{rarity_translate[lang].get(rarity_en)}"
+        "rarity": f"{rarity_translate[lang].get(rarity_en)}",
+        "min_float": min_float,
+        "max_float": max_float,
+
     }
 
 

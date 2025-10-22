@@ -9,7 +9,7 @@ from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InputMediaPhoto
 
-from filters.search_skins import get_skin_id, get_skin, lang
+from filters.search_skins import get_skin_id, get_skin, lang, get_exact_name
 from middlewares.database_data import get_skin_price, create_user, add_user_skin, get_user_skin, get_user_skins, \
     delete_user_skin, user_skin_trigger
 from kbds.inline import condition_kbds, create_inline_kb
@@ -17,28 +17,39 @@ from kbds.inline import condition_kbds, create_inline_kb
 user_private_router = Router()
 
 
-async def build_skin_message(user_id, skin, condition=None):
-    if condition in ('None', 'none'):
-        condition = None
+async def build_skin_message(user_id, skin, stattrak=False, condition=None):
+    is_stattrakawait = await get_exact_name(f"StatTrak™ {skin['req_name']} (Field-Tested)")
+    if condition == None:
+        condition = "Collections"
 
     rarity = f'\n\n{skin["rarity"]}' if skin["rarity"].lower() != 'none' else ''
 
-    if condition:
+    if condition != "Collections":
         condition_show_name = lang["ru"].get(condition, condition)
+
         url_name = f'{skin["req_name"]} ({condition})'
+
         full_name = f'<u><b>{skin["show_name"]} ({condition_show_name})</b></u>{rarity}'
     else:
         full_name = f'<u><b>{skin["show_name"]}</b></u>{rarity}'
         url_name = f'{skin["req_name"]}'
 
+    if is_stattrakawait and stattrak:
+        url_name = f'StatTrak™ {url_name}'
+
+        req_name = f'StatTrak™ {skin["req_name"]}'
+    else:
+        req_name = skin["req_name"]
+
     encoded_name = urllib.parse.quote(url_name)  # кодируем пробелы, скобки и спецсимволы
 
     url = f"https://steamcommunity.com/market/listings/730/{encoded_name}"
-    skins_price = await get_skin_price(skin["req_name"], condition if condition else '')
+    skins_price = await get_skin_price(req_name, condition if condition != "Collections" else '')
 
     if skins_price.get('lowest_price') or skins_price.get('median_price'):
         mid_price = '\nСредняя цена - ' + str(skins_price.get('median_price')) + ' 📊'
         min_price = 'Мин. предложение - ' + skins_price.get('lowest_price') + ' 📉\n\n'
+
         caption = f"{full_name}\n{mid_price if skins_price.get('median_price') else ''}\n{min_price if skins_price.get('lowest_price') else ''}<a href='{url}'>Посмотреть в Steam</a>"
     else:
         caption = f"{full_name}\n\nЭтот предмет никто не продает\n\n<a href='{url}'>Посмотреть в Steam</a>"
@@ -50,15 +61,21 @@ async def build_skin_message(user_id, skin, condition=None):
         kb['Добавить в инвентарь ✚'] = f'add|{skin["skin_id"]}|{skins_price.get("lowest_price")}|{condition}'
 
     kb[f'Инвентарь 🗄️'] = 'inventory_0'
-    if condition:
+    if condition != "Collections":
         kb['Назад'] = f'back|{skin["skin_id"]}'
     return caption, kb, skins_price.get('lowest_price') if skins_price.get('lowest_price') else '0.00'
 
 
 async def search_text(skin):
-    caption = f"<u><b>{skin['show_name']}</b></u>\n\n{skin['rarity']}\n\n{skin['descr']}"
+    is_stattrakawait = await get_exact_name(f"StatTrak™ {skin['req_name']} (Field-Tested)")
 
-    kb = condition_kbds(skin['skin_id'], )
+    stattrak = f"StatTrak™ |{'✅' if is_stattrakawait else '❌'}|"
+
+    min_float = f"Мин. флоат - {skin['min_float']}\n" if str(skin['min_float']).lower() != 'none' else ''
+    max_float = f"Макс. флоат - {skin['max_float']}\n\n" if str(skin['max_float']).lower() != 'none' else ''
+    caption = f"<u><b>{skin['show_name']}</b></u>\n\n{skin['rarity']}\n\n{min_float}{max_float}{stattrak}\n\n{skin['descr']}"
+
+    kb = condition_kbds(skin['skin_id'], is_stattrakawait)
     return caption, kb
 
 
@@ -168,13 +185,19 @@ async def skincalldata(call: types.CallbackQuery):
     skincalldata = call.data.split('|')
     skin_id = skincalldata[1]
     condition = skincalldata[2]
-
+    try:
+        _ = skincalldata[3]
+        stattrak = True
+    except:
+        stattrak = False
     skin = await get_skin(skin_id, 'ru')
 
     # skins_price = await get_skin_price(skin["req_name"], condition)
 
     caption, kb, _ = await build_skin_message(user_id=user_id, skin=skin,
-                                              condition=condition)
+                                              condition=condition, stattrak=stattrak)
+    if stattrak:
+        caption = f"<b>StatTrak™ |✅|</b>\n{caption}"
     try:
         await call.message.edit_caption(caption=
                                         caption,
@@ -200,7 +223,7 @@ async def skins_add(call: types.CallbackQuery):
 
     skin = await get_skin(skin_id, 'ru')
     if not condition or condition.lower() == 'none':
-        condition = None
+        condition = 'Collections'
     # Очистка цены от символов валюты
     price_clean = "".join(c for c in lowest_price if c.isdigit() or c == ".")
     try:
@@ -314,7 +337,7 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
     if call.data.startswith('increase_by'):
         calldata = call.data.split('|')
         value = calldata[4]
-        print(value)
+
         if value == 'plus':
             current_index = (current_index + 1) % len(increase_by)
         elif value == 'minus':

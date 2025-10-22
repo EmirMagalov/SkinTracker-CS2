@@ -79,7 +79,7 @@ class UserSkinViewSet(viewsets.ModelViewSet):
         condition = request.data.get('condition')
         threshold_value = request.data.get('threshold_value')
         last_price = request.data.get('last_price')
-        print(last_price)
+
         # Приводим строку "None" или пустую строку к настоящему None
         if not condition or condition.lower() == 'none':
             condition = None

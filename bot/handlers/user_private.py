@@ -392,15 +392,17 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
 
         action = calldata[4]
 
-        if action and action == 'plus':
-            if count < 5:
-
+        if action == 'plus':
+            # Если предмет новый и лимит достигнут — нельзя добавлять
+            if current == 0 and count >= 5:
+                await call.answer('Нельзя отслеживать больше 5 предметов!', show_alert=True)
+            else:
+                # Если предмет новый — увеличиваем счётчик
                 if current == 0:
                     count += 1
+                # Всегда увеличиваем current
                 current += Decimal(new_value)
 
-            else:
-                await call.answer('Нельзя отслеживать больше 5 предметов!', show_alert=True)
         elif action and action == 'minus':
             current = max(Decimal('0.00'), current - Decimal(str(new_value)))
             if current == 0:

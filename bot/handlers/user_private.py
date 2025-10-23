@@ -249,7 +249,7 @@ async def skincalldata(call: types.CallbackQuery):
 
 
 @user_private_router.callback_query(F.data.startswith('add'))
-async def skins_add(call: types.CallbackQuery):
+async def skins_add(call: types.CallbackQuery,state:FSMContext):
     user_id = call.from_user.id
     skincalldata = call.data.split('|')
     skin_id = skincalldata[1]
@@ -273,9 +273,16 @@ async def skins_add(call: types.CallbackQuery):
     #     req_name = f'StatTrak™ {skin["req_name"]}'
     # else:
     req_name = skin["req_name"]
-    await add_user_skin(user_id, skin_id, req_name, lowest_price_decimal,
+    data = await state.get_data()
+    a=await add_user_skin(user_id, skin_id, req_name, lowest_price_decimal,
                         condition)
+    user_skins = data.get("user_skins")
 
+    if user_skins:
+        user_skins.append(a)
+        await state.update_data(user_skins=user_skins)
+
+    await state.update_data(user_skins=user_skins)
     await call.answer("Педмет добавлен в инвентарь!", show_alert=True)
     build = await build_skin_message(user_id=user_id, skin=skin, condition=condition
                                      )
@@ -442,7 +449,7 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
 
         # !!! Обновляем список в state
         await state.update_data(user_skins=user_skins)
-
+        print(user_skins)
     current = f"Отслеживать изменение цены на <b>{current:.2f}$</b>" if current else 'Для отслеживание цены нажмите на <b>"+"</b>'
     caption = f"<b>Настройки 🛠️</b>\n\n{build['caption']}\n\nОтслеживаемых предметов <b>({count})</b>\n\n{current}"
     kb = {}

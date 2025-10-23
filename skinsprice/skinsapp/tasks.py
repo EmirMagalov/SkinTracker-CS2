@@ -127,7 +127,7 @@ async def process_skins():
                         try:
                             user_id = await sync_to_async(lambda: us.user.user_id)()
                             await bot.send_message(user_id, text, reply_markup=create_inline_kb(
-                                {'Перейти↗️': f'skincalldata|{skin.skin_id}|{skin.condition}'}), parse_mode="HTML")
+                                {'Подробнее↗️': f'skincalldata|{skin.skin_id}|{skin.condition}'}), parse_mode="HTML")
                             logger.info(f"[INFO] Отправлено пользователю {user_id}")
                         except Exception as e:
                             logger.info(f"[ERROR] Не удалось отправить пользователю {user_id}: {e}")

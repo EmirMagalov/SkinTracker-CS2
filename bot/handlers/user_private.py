@@ -24,14 +24,16 @@ async def build_skin_message(user_id, skin, stattrak=False, condition=None):
 
     rarity = f'\n\n{skin["rarity"]}' if skin["rarity"].lower() != 'none' else ''
 
+    min_float = f"\n\nМин. степень износа - {skin['min_float']}\n" if str(skin['min_float']).lower() != 'none' else ''
+    max_float = f"Макс. степень износа - {skin['max_float']}\n" if str(skin['max_float']).lower() != 'none' else ''
     if condition != "Collections":
         condition_show_name = lang["ru"].get(condition, condition)
 
         url_name = f'{skin["req_name"]} ({condition})'
 
-        full_name = f'<b>{skin["show_name"]} ({condition_show_name})</b>{rarity}'
+        full_name = f'<b>{skin["show_name"]} ({condition_show_name})</b>{rarity}{min_float}{max_float}'
     else:
-        full_name = f'<b>{skin["show_name"]}</b>{rarity}'
+        full_name = f'<b>{skin["show_name"]}</b>\n'
         url_name = f'{skin["req_name"]}'
     skin_id = skin["skin_id"]
 
@@ -53,7 +55,7 @@ async def build_skin_message(user_id, skin, stattrak=False, condition=None):
         mid_price = '\nСредняя цена - ' + str(skins_price.get('median_price')) + ' 📊'
         min_price = 'Мин. предложение - ' + skins_price.get('lowest_price') + ' 📉\n\n'
 
-        caption = f"{full_name}\n{mid_price if skins_price.get('median_price') else ''}\n{min_price if skins_price.get('lowest_price') else ''}<a href='{url}'>Посмотреть в Steam</a>"
+        caption = f"{full_name}{mid_price if skins_price.get('median_price') else ''}\n{min_price if skins_price.get('lowest_price') else ''}<a href='{url}'>Посмотреть в Steam</a>"
     else:
         caption = f"{full_name}\n\nЭтот предмет никто не продает\n\n<a href='{url}'>Посмотреть в Steam</a>"
 
@@ -88,8 +90,8 @@ async def search_text(skin):
 
     stattrak = f"StatTrak™ |{'✅' if is_stattrakawait else '❌'}|"
 
-    min_float = f"Мин. флоат - {skin['min_float']}\n" if str(skin['min_float']).lower() != 'none' else ''
-    max_float = f"Макс. флоат - {skin['max_float']}\n\n" if str(skin['max_float']).lower() != 'none' else ''
+    min_float = f"Мин. степень износа - {skin['min_float']}\n" if str(skin['min_float']).lower() != 'none' else ''
+    max_float = f"Макс. степень износа - {skin['max_float']}\n\n" if str(skin['max_float']).lower() != 'none' else ''
     caption = f"<u><b>{skin['show_name']}</b></u>\n\n{skin['rarity']}\n\n{min_float}{max_float}{stattrak}\n\n{skin['descr']}"
 
     kb = condition_kbds(skin['skin_id'], is_stattrakawait)
@@ -421,7 +423,7 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
     kb['>'] = f'increase_by|{skin_id}|{condition}|{index}|plus'
 
     if condition.lower() != 'none':
-        kb['Перейти↗️'] = f'go_to,{skin["req_name"]}'
+        kb['Подробнее↗️'] = f'go_to,{skin["req_name"]}'
     kb['Удалить 🗑️'] = f'delete|{skin_id}|{condition}'
     kb['Назад'] = f'inventory_{index}'
     try:

@@ -60,11 +60,11 @@ async def build_skin_message(user_id, skin, stattrak=False, condition=None):
     else:
         caption = f"{full_name}\n\nЭтот предмет никто не продает\n\n<a href='{url}'>Посмотреть в Steam</a>"
 
-    user_skin = await get_user_skin(user_id, skin_id, condition)
+    # user_skin = await get_user_skin(user_id, skin_id, condition)
 
     kb = {}
-    if not user_skin:
-        kb['Добавить в инвентарь ✚'] = f'add|{skin_id}|{skins_price.get("lowest_price")}|{condition}|{stattrak}'
+    # if not user_skin:
+    #     kb['Добавить в инвентарь ✚'] = f'add|{skin_id}|{skins_price.get("lowest_price")}|{condition}|{stattrak}'
 
     kb[f'Инвентарь 🗄️'] = 'inventory_0'
     if condition != "Collections":
@@ -208,11 +208,16 @@ async def skincalldata(call: types.CallbackQuery):
         stattrak = False
 
     skin = await get_skin(skin_id, 'ru')
-
+    print(skin_id)
     # skins_price = await get_skin_price(skin["req_name"], condition)
 
-    caption, kb, _ = await build_skin_message(user_id=user_id, skin=skin,
-                                              condition=condition, stattrak=stattrak)
+    caption, kb, skins_price = await build_skin_message(user_id=user_id, skin=skin,
+                                            condition=condition, stattrak=stattrak)
+    user_skin = await get_user_skin(user_id, skin_id, condition)
+    print(user_skin)
+
+    if not user_skin:
+        kb = {f'Добавить в инвентарь ✚': f'add|{skin_id}|{skins_price}|{condition}|{stattrak}', **kb}
     if stattrak:
         caption = f"{caption}"
     try:
@@ -357,6 +362,14 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
 
     increase_by = [0.10, 1, 5, 10, 50, 100]
     data = await state.get_data()
+    print(f"[STATE DATA] {data}")
+    user_skins = data.get("user_skins")
+
+    if not user_skins:
+        user_skins = await get_user_skins(user_id)
+        print("TUS")
+        await state.update_data(user_skins=user_skins)
+
     current_index = data.get("increase_by_index", 1)
     if call.data.startswith('increase_by'):
         calldata = call.data.split('|')
@@ -373,7 +386,7 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
     skin = await get_skin(skin_id, 'ru')
     caption, _, last_price = await build_skin_message(user_id=user_id, skin=skin,
                                                       condition=condition)
-    user_skins = await get_user_skins(user_id)
+
     user_skin = next(
         (
             s for s in user_skins
@@ -412,6 +425,8 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
                 count -= 1
         await user_skin_trigger(user_id, skin_id, condition, str(current),
                                 str(last_price.replace("$", "").replace(",", "")))
+        await state.update_data(user_skins=user_skins)
+
     current = f"Отслеживать изменение цены на <b>{current:.2f}$</b>" if current else 'Для отслеживание цены нажмите на <b>"+"</b>'
     caption = f"<b>Настройки 🛠️</b>\n\n{caption}\n\nОтслеживаемых предметов <b>({count})</b>\n\n{current}"
     kb = {}

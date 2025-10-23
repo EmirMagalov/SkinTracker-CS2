@@ -434,7 +434,7 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
             if current == 0:
                 count -= 1
         await user_skin_trigger(user_id, skin_id, condition, str(current),
-                                str(build['last_price'].replace("$", "").replace(",", "")))
+                                str(build['skins_price'].replace("$", "").replace(",", "")))
         user_skin['threshold_value'] = str(current)
 
         # !!! Обновляем список в state

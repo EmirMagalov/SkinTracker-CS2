@@ -349,7 +349,7 @@ async def inventory(call: types.CallbackQuery):
 
 
 @user_private_router.callback_query(F.data.startswith('delete'))
-async def delete_skin(call: types.CallbackQuery):
+async def delete_skin(call: types.CallbackQuery,state:FSMContext):
     user_id = call.from_user.id
     skincalldata = call.data.split('|')
     skin_id = skincalldata[1]
@@ -357,7 +357,7 @@ async def delete_skin(call: types.CallbackQuery):
 
     await delete_user_skin(user_id, skin_id, condition)
     skin = await get_skin(skin_id, 'ru')
-
+    await state.clear()
     await build_skin_message(user_id=user_id, skin=skin, condition=condition)
     index = 0
     await inventory_show(user_id, index, call, delete=True)

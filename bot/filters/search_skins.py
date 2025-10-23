@@ -35,6 +35,8 @@ async def get_exact_name(search_name):
         return True
     else:
         return False
+
+
 # --- функция для поиска скина/кейса ---
 async def get_skin_id(skins_name: str, threshold=70):
     query = normalize(skins_name)
@@ -62,6 +64,34 @@ async def get_skin_id(skins_name: str, threshold=70):
     return None
 
 
+async def get_collection_by_skin_id(skin_id, lang):
+    skins = skins_en if lang == 'en' else skins_ru
+
+    # если данные — словарь
+    if isinstance(skins, dict):
+        iterable = skins.values()
+    else:
+        iterable = skins
+
+    for collection in iterable:
+        # ищем только коллекции
+        if collection.get("id", "").startswith("collection"):
+            if skin_id.startswith('skin'):
+                for item in collection.get("contains", []):
+
+                    if item.get("id", "").lower() == skin_id.split('_0')[0].lower():
+                        return collection.get('name')
+            elif skin_id.startswith('crate'):
+                for item in collection.get("crates", []):
+
+                    if item.get("id", "").lower() == skin_id.lower():
+                        return collection.get('name')  # нашли коллекцию, возвращаем её
+            else:
+                if collection.get('id') == skin_id:
+                    return collection.get('name')
+    return None
+
+
 async def skin_lang(skin_id, lang):
     skins = skins_en if lang == 'en' else skins_ru
 
@@ -72,6 +102,7 @@ async def skin_lang(skin_id, lang):
         iterable = skins
 
     for s in iterable:
+
         # and not
         if skin_id.lower() == s.get("id", "").lower():
             if s.get("id").startswith('collection'):
@@ -80,7 +111,10 @@ async def skin_lang(skin_id, lang):
                     if crate.get('id').startswith('crate'):
                         return "crates", s.get("crates")[0]
             if s.get("id").startswith('skin'):
+
                 return "skin", s
+
+
             else:
                 return 'other', s
 
@@ -115,7 +149,9 @@ async def get_skin(skin_id, lang):
     descr = html.escape(descr)
     min_float = skins_data.get('min_float')
     max_float = skins_data.get('max_float')
-    stattrak = skins_data.get('stattrak')
+    collection = await get_collection_by_skin_id(skin_id, lang)
+    collection_name = collection if collection else ''
+    print(collection_name)
     rarity_data_en = skins_data_en.get('rarity')
     rarity_en = rarity_data_en.get('name') if rarity_data_en else None
     return {
@@ -128,6 +164,7 @@ async def get_skin(skin_id, lang):
         "rarity": f"{rarity_translate[lang].get(rarity_en)}",
         "min_float": min_float,
         "max_float": max_float,
+        "collection": collection_name
 
     }
 

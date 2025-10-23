@@ -151,7 +151,7 @@ async def get_skin(skin_id, lang):
     max_float = skins_data.get('max_float')
     collection = await get_collection_by_skin_id(skin_id, lang)
     collection_name = collection if collection else ''
-    print(collection_name)
+
     rarity_data_en = skins_data_en.get('rarity')
     rarity_en = rarity_data_en.get('name') if rarity_data_en else None
     return {

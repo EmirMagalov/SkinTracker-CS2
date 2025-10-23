@@ -200,7 +200,7 @@ async def skincalldata(call: types.CallbackQuery):
     condition = skincalldata[2]
 
     try:
-        print(skincalldata[3])
+
         _ = skincalldata[3]
 
         stattrak = True
@@ -208,13 +208,13 @@ async def skincalldata(call: types.CallbackQuery):
         stattrak = False
 
     skin = await get_skin(skin_id, 'ru')
-    print(skin_id)
+
     # skins_price = await get_skin_price(skin["req_name"], condition)
 
     caption, kb, skins_price = await build_skin_message(user_id=user_id, skin=skin,
                                             condition=condition, stattrak=stattrak)
     user_skin = await get_user_skin(user_id, skin_id, condition)
-    print(user_skin)
+
 
     if not user_skin:
         kb = {f'Добавить в инвентарь ✚': f'add|{skin_id}|{skins_price}|{condition}|{stattrak}', **kb}
@@ -361,14 +361,15 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
     index = skincalldata[3]
 
     increase_by = [0.10, 1, 5, 10, 50, 100]
-    data = await state.get_data()
-    print(f"[STATE DATA] {data}")
+    data = await state.get_data()  # данные из state
     user_skins = data.get("user_skins")
 
     if not user_skins:
         user_skins = await get_user_skins(user_id)
-        print("TUS")
         await state.update_data(user_skins=user_skins)
+        # Теперь обновляем переменную data, чтобы дальше работать с актуальным значением
+        data = await state.get_data()
+        user_skins = data.get("user_skins")
 
     current_index = data.get("increase_by_index", 1)
     if call.data.startswith('increase_by'):
@@ -425,7 +426,11 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
                 count -= 1
         await user_skin_trigger(user_id, skin_id, condition, str(current),
                                 str(last_price.replace("$", "").replace(",", "")))
+        user_skin['threshold_value'] = str(current)
+
+        # !!! Обновляем список в state
         await state.update_data(user_skins=user_skins)
+
 
     current = f"Отслеживать изменение цены на <b>{current:.2f}$</b>" if current else 'Для отслеживание цены нажмите на <b>"+"</b>'
     caption = f"<b>Настройки 🛠️</b>\n\n{caption}\n\nОтслеживаемых предметов <b>({count})</b>\n\n{current}"

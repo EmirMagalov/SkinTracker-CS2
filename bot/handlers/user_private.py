@@ -33,11 +33,14 @@ async def build_skin_message(user_id, skin, stattrak=False, condition=None):
     else:
         full_name = f'<u><b>{skin["show_name"]}</b></u>{rarity}'
         url_name = f'{skin["req_name"]}'
+    skin_id = skin["skin_id"]
 
-    if is_stattrakawait and stattrak:
-        url_name = f'StatTrak™ {url_name}'
-
-        req_name = f'StatTrak™ {skin["req_name"]}'
+    if stattrak and is_stattrakawait:
+        print("TUS")
+        # Только теперь добавляем префикс и _st
+        req_name = f"StatTrak™ {skin['req_name']}"
+        url_name = f"StatTrak™ {skin['req_name']}"
+        skin_id = skin["skin_id"] + "_st"
     else:
         req_name = skin["req_name"]
 
@@ -54,20 +57,34 @@ async def build_skin_message(user_id, skin, stattrak=False, condition=None):
     else:
         caption = f"{full_name}\n\nЭтот предмет никто не продает\n\n<a href='{url}'>Посмотреть в Steam</a>"
 
-    user_skin = await get_user_skin(user_id, skin["skin_id"], condition)
+    user_skin = await get_user_skin(user_id, skin_id, condition)
 
     kb = {}
     if not user_skin:
-        kb['Добавить в инвентарь ✚'] = f'add|{skin["skin_id"]}|{skins_price.get("lowest_price")}|{condition}'
+        kb['Добавить в инвентарь ✚'] = f'add|{skin_id}|{skins_price.get("lowest_price")}|{condition}|{stattrak}'
 
     kb[f'Инвентарь 🗄️'] = 'inventory_0'
     if condition != "Collections":
-        kb['Назад'] = f'back|{skin["skin_id"]}'
+        kb['Назад'] = f'back|{skin_id.split("_st")[0]}'
     return caption, kb, skins_price.get('lowest_price') if skins_price.get('lowest_price') else '0.00'
+@user_private_router.callback_query(F.data.startswith('back|'))
+async def back(call: types.CallbackQuery):
+    skin_id = call.data.split('|')[-1]
+    skin = await get_skin(skin_id, 'ru')
+    caption, kb = await search_text(skin)
+    await call.message.edit_caption(caption=caption,
+                                    reply_markup=kb, parse_mode='HTML')
 
 
 async def search_text(skin):
-    is_stattrakawait = await get_exact_name(f"StatTrak™ {skin['req_name']} (Field-Tested)")
+    req_name = skin['req_name']
+
+    # Если имя не начинается с "StatTrak™", добавляем
+    if not req_name.strip().startswith("StatTrak™"):
+        query = f"StatTrak™ {req_name} (Field-Tested)"
+    else:
+        query = f"{req_name} (Field-Tested)"
+    is_stattrakawait = await get_exact_name(query)
 
     stattrak = f"StatTrak™ |{'✅' if is_stattrakawait else '❌'}|"
 
@@ -170,26 +187,23 @@ async def search(message: types.Message):
     await skin_show(user_id, message.text, message)
 
 
-@user_private_router.callback_query(F.data.startswith('back|'))
-async def back(call: types.CallbackQuery):
-    skin_id = call.data.split('|')[-1]
-    skin = await get_skin(skin_id, 'ru')
-    caption, kb = await search_text(skin)
-    await call.message.edit_caption(caption=caption,
-                                    reply_markup=kb, parse_mode='HTML')
 
 
 @user_private_router.callback_query(F.data.startswith('skincalldata|'))
 async def skincalldata(call: types.CallbackQuery):
     user_id = call.from_user.id
     skincalldata = call.data.split('|')
-    skin_id = skincalldata[1]
+    skin_id = skincalldata[1].split('_st')[0]
     condition = skincalldata[2]
+    print(skin_id)
     try:
+        print(skincalldata[3])
         _ = skincalldata[3]
+
         stattrak = True
     except:
         stattrak = False
+
     skin = await get_skin(skin_id, 'ru')
 
     # skins_price = await get_skin_price(skin["req_name"], condition)
@@ -197,7 +211,7 @@ async def skincalldata(call: types.CallbackQuery):
     caption, kb, _ = await build_skin_message(user_id=user_id, skin=skin,
                                               condition=condition, stattrak=stattrak)
     if stattrak:
-        caption = f"<b>StatTrak™ |✅|</b>\n{caption}"
+        caption = f"{caption}"
     try:
         await call.message.edit_caption(caption=
                                         caption,
@@ -220,7 +234,8 @@ async def skins_add(call: types.CallbackQuery):
     skin_id = skincalldata[1]
     lowest_price = skincalldata[2]
     condition = skincalldata[3]
-
+    stattrak = skincalldata[4]
+    stattrak = stattrak.lower() == "true"
     skin = await get_skin(skin_id, 'ru')
     if not condition or condition.lower() == 'none':
         condition = 'Collections'
@@ -232,7 +247,13 @@ async def skins_add(call: types.CallbackQuery):
         print("Ошибка конвертации цены:", e)
         lowest_price_decimal = '0.00'
 
-    await add_user_skin(user_id, skin_id, skin["req_name"], lowest_price_decimal,
+
+    # if stattrak:
+    #     # skin_id = skin_id + '_st'
+    #     req_name = f'StatTrak™ {skin["req_name"]}'
+    # else:
+    req_name = skin["req_name"]
+    await add_user_skin(user_id, skin_id, req_name, lowest_price_decimal,
                         condition)
 
     await call.answer("Педмет добавлен в инвентарь!", show_alert=True)

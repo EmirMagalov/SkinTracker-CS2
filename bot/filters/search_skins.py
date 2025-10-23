@@ -21,7 +21,7 @@ async def get_exact_name(search_name):
     search_list = skins_en.values()
     iterable = search_list.values() if isinstance(search_list, dict) else search_list
     search_choices = []
-
+    lookup = {}
     # Нормализуем имя, которое ищем
     norm_search_name = normalize(search_name)
 
@@ -29,8 +29,9 @@ async def get_exact_name(search_name):
         skin_name = s.get("name", "")
         norm_name = normalize(skin_name)
         search_choices.append(norm_name)
-
+        lookup[norm_name] = s.get("id")
     if norm_search_name in search_choices:
+
         return True
     else:
         return False

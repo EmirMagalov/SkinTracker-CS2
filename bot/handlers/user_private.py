@@ -34,7 +34,7 @@ async def build_skin_message(user_id, skin, stattrak=False, condition=None):
 
         full_name = f'<b>{skin["show_name"]} ({condition_show_name})</b>{rarity}{collection}{min_float}{max_float}'
     else:
-        full_name = f'<b>{skin["show_name"]}</b>\n'
+        full_name = f'<b>{skin["show_name"]}</b>{collection}\n'
         url_name = f'{skin["req_name"]}'
     skin_id = skin["skin_id"]
 

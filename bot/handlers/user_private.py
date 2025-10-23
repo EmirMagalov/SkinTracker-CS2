@@ -26,7 +26,7 @@ async def build_skin_message(user_id, skin, stattrak=False, condition=None):
 
     min_float = f"\n\nМин. степень износа - {skin['min_float']}\n" if str(skin['min_float']).lower() != 'none' else ''
     max_float = f"Макс. степень износа - {skin['max_float']}\n" if str(skin['max_float']).lower() != 'none' else ''
-    collection = f"\n\n🏷️{skin['collection']}" if skin['collection']!= '' else ''
+    collection = f"\n\n🏷️{skin['collection']}" if skin['collection'] != '' else ''
     if condition != "Collections":
         condition_show_name = lang["ru"].get(condition, condition)
 
@@ -69,7 +69,11 @@ async def build_skin_message(user_id, skin, stattrak=False, condition=None):
     kb[f'Инвентарь 🗄️'] = 'inventory_0'
     if condition != "Collections":
         kb['Назад'] = f'back|{skin_id.split("_st")[0]}'
-    return caption, kb, skins_price.get('lowest_price') if skins_price.get('lowest_price') else '0.00'
+    return {'caption': caption, 'kb': kb,
+            'skins_price': skins_price.get('lowest_price') if skins_price.get('lowest_price') else '0.00',
+            'skin_id': skin_id}
+
+
 @user_private_router.callback_query(F.data.startswith('back|'))
 async def back(call: types.CallbackQuery):
     skin_id = call.data.split('|')[-1]
@@ -151,30 +155,36 @@ async def skin_show(user_id, skin_name, event: Union[types.Message, types.Callba
             return
         else:
             skins_price = await get_skin_price(skin['req_name'])
+            condition = 'Collections'
+            user_skin = await get_user_skin(user_id, skin_id, condition)
 
-            caption, kb, _ = await build_skin_message(user_id=user_id, skin=skin,
-                                                      )
+            build = await build_skin_message(user_id=user_id, skin=skin,
+                                             )
+            kb = build['kb']
+            if not user_skin:
+                kb = {f'Добавить в инвентарь ✚': f'add|{build["skin_id"]}|{skins_price["lowest_price"]}|{condition}',
+                      **build['kb']}
             if skins_price.get('lowest_price') or skins_price.get('median_price'):
                 if isinstance(event, types.Message):
-                    await message.answer_photo(skin['image'], caption=caption,
+                    await message.answer_photo(skin['image'], caption=build['caption'],
                                                reply_markup=create_inline_kb(kb),
 
                                                parse_mode='HTML')
                 elif isinstance(event, types.CallbackQuery):
-                    await message.edit_caption(skin['image'], caption=caption,
+                    await message.edit_caption(skin['image'], caption=build['caption'],
                                                reply_markup=create_inline_kb(kb),
 
                                                parse_mode='HTML')
 
             else:
                 if isinstance(event, types.Message):
-                    await message.answer_photo(skin['image'], caption=caption,
+                    await message.answer_photo(skin['image'], caption=build['caption'],
 
                                                reply_markup=create_inline_kb(kb),
                                                parse_mode='HTML')
                     # await message.delete()
                 elif isinstance(event, types.CallbackQuery):
-                    await message.edit_caption(skin['image'], caption=caption,
+                    await message.edit_caption(skin['image'], caption=build['caption'],
 
                                                reply_markup=create_inline_kb(kb),
                                                parse_mode='HTML')
@@ -188,8 +198,6 @@ async def skin_show(user_id, skin_name, event: Union[types.Message, types.Callba
 async def search(message: types.Message):
     user_id = message.from_user.id
     await skin_show(user_id, message.text, message)
-
-
 
 
 @user_private_router.callback_query(F.data.startswith('skincalldata|'))
@@ -211,15 +219,17 @@ async def skincalldata(call: types.CallbackQuery):
 
     # skins_price = await get_skin_price(skin["req_name"], condition)
 
-    caption, kb, skins_price = await build_skin_message(user_id=user_id, skin=skin,
-                                            condition=condition, stattrak=stattrak)
-    user_skin = await get_user_skin(user_id, skin_id, condition)
+    build = await build_skin_message(user_id=user_id, skin=skin,
+                                     condition=condition, stattrak=stattrak)
+    user_skin = await get_user_skin(user_id, build["skin_id"], condition)
 
-
+    kb = build['kb']
+    caption = build['caption']
     if not user_skin:
-        kb = {f'Добавить в инвентарь ✚': f'add|{skin_id}|{skins_price}|{condition}|{stattrak}', **kb}
+        kb = {f'Добавить в инвентарь ✚': f'add|{build["skin_id"]}|{build["skins_price"]}|{condition}|{stattrak}',
+              **build['kb']}
     if stattrak:
-        caption = f"{caption}"
+        caption = f"{build['caption']}"
     try:
         await call.message.edit_caption(caption=
                                         caption,
@@ -242,8 +252,8 @@ async def skins_add(call: types.CallbackQuery):
     skin_id = skincalldata[1]
     lowest_price = skincalldata[2]
     condition = skincalldata[3]
-    stattrak = skincalldata[4]
-    stattrak = stattrak.lower() == "true"
+    # stattrak = skincalldata[4]
+    # stattrak = stattrak.lower() == "true"
     skin = await get_skin(skin_id, 'ru')
     if not condition or condition.lower() == 'none':
         condition = 'Collections'
@@ -255,7 +265,6 @@ async def skins_add(call: types.CallbackQuery):
         print("Ошибка конвертации цены:", e)
         lowest_price_decimal = '0.00'
 
-
     # if stattrak:
     #     # skin_id = skin_id + '_st'
     #     req_name = f'StatTrak™ {skin["req_name"]}'
@@ -265,11 +274,11 @@ async def skins_add(call: types.CallbackQuery):
                         condition)
 
     await call.answer("Педмет добавлен в инвентарь!", show_alert=True)
-    caption, kb, _ = await build_skin_message(user_id=user_id, skin=skin, condition=condition
-                                              )
+    build = await build_skin_message(user_id=user_id, skin=skin, condition=condition
+                                     )
 
-    await call.message.edit_caption(caption=caption,
-                                    reply_markup=create_inline_kb(kb),
+    await call.message.edit_caption(caption=build['caption'],
+                                    reply_markup=create_inline_kb(build['kb']),
 
                                     parse_mode='HTML')
 
@@ -294,10 +303,10 @@ async def inventory_show(user_id, index, call: types.CallbackQuery, delete=False
     condition = user_skins['condition']
     skin = await get_skin(skin_id, 'ru')
 
-    caption, _, _ = await build_skin_message(user_id=user_id, skin=skin,
-                                             condition=condition)
+    build = await build_skin_message(user_id=user_id, skin=skin,
+                                     condition=condition)
 
-    caption = f"<b>Инвентарь 🗄️</b>\n<i>Предмет {index + 1}/{user_skins_len}</i>\n\n{caption}"
+    caption = f"<b>Инвентарь 🗄️</b>\n<i>Предмет {index + 1}/{user_skins_len}</i>\n\n{build['caption']}"
     kb = {}
 
     if index > 0:
@@ -339,7 +348,7 @@ async def delete_skin(call: types.CallbackQuery):
     await delete_user_skin(user_id, skin_id, condition)
     skin = await get_skin(skin_id, 'ru')
 
-    caption, _, _ = await build_skin_message(user_id=user_id, skin=skin, condition=condition)
+    await build_skin_message(user_id=user_id, skin=skin, condition=condition)
     index = 0
     await inventory_show(user_id, index, call, delete=True)
 
@@ -385,8 +394,8 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
 
     await state.update_data(increase_by_index=current_index)
     skin = await get_skin(skin_id, 'ru')
-    caption, _, last_price = await build_skin_message(user_id=user_id, skin=skin,
-                                                      condition=condition)
+    build = await build_skin_message(user_id=user_id, skin=skin,
+                                     condition=condition)
 
     user_skin = next(
         (
@@ -425,15 +434,14 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
             if current == 0:
                 count -= 1
         await user_skin_trigger(user_id, skin_id, condition, str(current),
-                                str(last_price.replace("$", "").replace(",", "")))
+                                str(build['last_price'].replace("$", "").replace(",", "")))
         user_skin['threshold_value'] = str(current)
 
         # !!! Обновляем список в state
         await state.update_data(user_skins=user_skins)
 
-
     current = f"Отслеживать изменение цены на <b>{current:.2f}$</b>" if current else 'Для отслеживание цены нажмите на <b>"+"</b>'
-    caption = f"<b>Настройки 🛠️</b>\n\n{caption}\n\nОтслеживаемых предметов <b>({count})</b>\n\n{current}"
+    caption = f"<b>Настройки 🛠️</b>\n\n{build['caption']}\n\nОтслеживаемых предметов <b>({count})</b>\n\n{current}"
     kb = {}
     #
 

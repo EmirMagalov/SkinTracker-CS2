@@ -29,14 +29,14 @@ async def build_skin_message(user_id, skin, stattrak=False, condition=None):
 
         url_name = f'{skin["req_name"]} ({condition})'
 
-        full_name = f'<u><b>{skin["show_name"]} ({condition_show_name})</b></u>{rarity}'
+        full_name = f'<b>{skin["show_name"]} ({condition_show_name})</b>{rarity}'
     else:
-        full_name = f'<u><b>{skin["show_name"]}</b></u>{rarity}'
+        full_name = f'<b>{skin["show_name"]}</b>{rarity}'
         url_name = f'{skin["req_name"]}'
     skin_id = skin["skin_id"]
 
     if stattrak and is_stattrakawait:
-        print("TUS")
+        full_name = f'<b>StatTrak™</b> {full_name}'
         # Только теперь добавляем префикс и _st
         req_name = f"StatTrak™ {skin['req_name']}"
         url_name = f"StatTrak™ {skin['req_name']}"
@@ -195,7 +195,7 @@ async def skincalldata(call: types.CallbackQuery):
     skincalldata = call.data.split('|')
     skin_id = skincalldata[1].split('_st')[0]
     condition = skincalldata[2]
-    print(skin_id)
+
     try:
         print(skincalldata[3])
         _ = skincalldata[3]

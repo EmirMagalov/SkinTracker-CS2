@@ -477,7 +477,7 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
     kb[f'Шаг {new_value:.2f}$'] = 'None'
     kb['>'] = f'increase_by|{skin_id}|{condition}|{index}|plus'
 
-    if condition.lower() != 'none':
+    if condition!= 'Collections':
         kb['Подробнее↗️'] = f'go_to,{skin["req_name"]}'
     kb['Удалить 🗑️'] = f'delete|{skin_id}|{condition}'
     kb['Назад'] = f'inventory_{index}'

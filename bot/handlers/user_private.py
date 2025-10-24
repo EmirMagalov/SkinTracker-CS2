@@ -1,3 +1,4 @@
+import json
 import re
 import urllib.parse
 from typing import Union
@@ -7,16 +8,18 @@ from aiogram import Router, F, types
 from aiogram.filters import or_f
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
+
 from aiogram.types import InputMediaPhoto
 
 from filters.search_skins import get_skin_id, get_skin, lang, get_exact_name
 from middlewares.database_data import get_skin_price, create_user, add_user_skin, get_user_skin, get_user_skins, \
     delete_user_skin, user_skin_trigger
 from kbds.inline import condition_kbds, create_inline_kb
+from middlewares.loader import redis
 
 user_private_router = Router()
 
-
+ttl = 170
 async def build_skin_message(user_id, skin, stattrak=False, condition=None):
     is_stattrakawait = await get_exact_name(f"StatTrak™ {skin['req_name']} (Field-Tested)")
     if condition == None:
@@ -160,7 +163,7 @@ async def skin_show(user_id, skin_name, event: Union[types.Message, types.Callba
             skins_price = await get_skin_price(skin['req_name'])
             condition = 'Collections'
             user_skin = await get_user_skin(user_id, skin_id, condition)
-            print(skins_price)
+
             build = await build_skin_message(user_id=user_id, skin=skin,
                                              )
             kb = build['kb']
@@ -273,16 +276,22 @@ async def skins_add(call: types.CallbackQuery,state:FSMContext):
     #     req_name = f'StatTrak™ {skin["req_name"]}'
     # else:
     req_name = skin["req_name"]
-    data = await state.get_data()
-    a=await add_user_skin(user_id, skin_id, req_name, lowest_price_decimal,
+
+    add=await add_user_skin(user_id, skin_id, req_name, lowest_price_decimal,
                         condition)
-    user_skins = data.get("user_skins")
+    user_skins_raw = await redis.get(f'user_skins_{user_id}')
 
-    if user_skins:
-        user_skins.append(a)
-        await state.update_data(user_skins=user_skins)
+    if user_skins_raw:
+        user_skins = json.loads(user_skins_raw)  # превращаем JSON в список словарей
+        user_skins.insert(0, add)  # вставляем элемент в начало списка
+        await redis.set(f"user_skins_{user_id}", json.dumps(user_skins), ex=ttl)
+    # else:
+    #     user_skins = await get_user_skins(user_id)
+    #     await redis.set(f'user_skins_{user_id}', json.dumps(user_skins), ex=300)
 
-    await state.update_data(user_skins=user_skins)
+
+
+
     await call.answer("Педмет добавлен в инвентарь!", show_alert=True)
     build = await build_skin_message(user_id=user_id, skin=skin, condition=condition
                                      )
@@ -294,8 +303,13 @@ async def skins_add(call: types.CallbackQuery,state:FSMContext):
 
 
 async def inventory_show(user_id, index, call: types.CallbackQuery, delete=False):
-    user_skins = await get_user_skins(user_id)
+    user_skins_raw = await redis.get(f'user_skins_{user_id}')
 
+    if user_skins_raw:
+        user_skins = json.loads(user_skins_raw)  # превращаем JSON в список словарей
+    else:
+        user_skins = await get_user_skins(user_id)
+        await redis.set(f'user_skins_{user_id}', json.dumps(user_skins), ex=ttl)
     user_skins_len = len(user_skins)
     if not user_skins:
         if delete:
@@ -340,12 +354,13 @@ async def inventory_show(user_id, index, call: types.CallbackQuery, delete=False
 
 
 @user_private_router.callback_query(F.data.startswith('inventory_'))
-async def inventory(call: types.CallbackQuery):
+async def inventory(call: types.CallbackQuery,state:FSMContext):
     user_id = call.from_user.id
 
     index = call.data.split('_')[-1]
     index = int(index)
     await inventory_show(user_id, index, call)
+    # await state.clear()
 
 
 @user_private_router.callback_query(F.data.startswith('delete'))
@@ -357,7 +372,7 @@ async def delete_skin(call: types.CallbackQuery,state:FSMContext):
 
     await delete_user_skin(user_id, skin_id, condition)
     skin = await get_skin(skin_id, 'ru')
-    await state.clear()
+    await redis.delete(f"user_skins_{user_id}")
     await build_skin_message(user_id=user_id, skin=skin, condition=condition)
     index = 0
     await inventory_show(user_id, index, call, delete=True)
@@ -378,18 +393,19 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
     skin_id = skincalldata[1]
     condition = skincalldata[2]
     index = skincalldata[3]
-
+    data = await state.get_data()
     increase_by = [0.10, 1, 5, 10, 50, 100]
-    data = await state.get_data()  # данные из state
-    user_skins = data.get("user_skins")
+    user_skins_raw = await redis.get(f'user_skins_{user_id}')
 
-    if not user_skins:
+    if user_skins_raw:
+        user_skins = json.loads(user_skins_raw)  # превращаем JSON в список словарей
+    else:
         user_skins = await get_user_skins(user_id)
-        await state.update_data(user_skins=user_skins)
+        await redis.set(f'user_skins_{user_id}', json.dumps(user_skins), ex=ttl)
         # Теперь обновляем переменную data, чтобы дальше работать с актуальным значением
-        data = await state.get_data()
-        user_skins = data.get("user_skins")
-
+        # data = await state.get_data()
+        # user_skins = data.get("user_skins")
+    print(user_skins)
     current_index = data.get("increase_by_index", 1)
     if call.data.startswith('increase_by'):
         calldata = call.data.split('|')

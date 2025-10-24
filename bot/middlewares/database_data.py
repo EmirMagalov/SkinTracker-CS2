@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 API =os.getenv('URL')
 
-CACHE_TTL = 180  # 5 минут
+CACHE_TTL = 180  # 3 минут
 
 
 async def get_skin_price(skin_name, condition=None):

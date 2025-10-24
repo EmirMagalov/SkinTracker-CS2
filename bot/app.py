@@ -3,11 +3,14 @@ import asyncio
 from aiogram import Bot, Dispatcher, types
 from dotenv import load_dotenv
 from handlers.user_private import user_private_router
+from aiogram.fsm.storage.redis import RedisStorage
 from kbds.commands import private
 from handlers.admin import admin_private
+from middlewares.loader import redis
 load_dotenv()
 bot = Bot(token=os.getenv('TOKEN'))
-dp = Dispatcher()
+storage = RedisStorage(redis=redis)
+dp = Dispatcher(storage=storage)
 dp.include_router(admin_private)
 dp.include_router(user_private_router)
 

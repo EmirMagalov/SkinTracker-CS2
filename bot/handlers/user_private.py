@@ -405,7 +405,7 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
         # Теперь обновляем переменную data, чтобы дальше работать с актуальным значением
         # data = await state.get_data()
         # user_skins = data.get("user_skins")
-    print(user_skins)
+    # print(user_skins)
     current_index = data.get("increase_by_index", 1)
     if call.data.startswith('increase_by'):
         calldata = call.data.split('|')
@@ -464,7 +464,7 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
         user_skin['threshold_value'] = str(current)
 
         # !!! Обновляем список в state
-        await state.update_data(user_skins=user_skins)
+        await redis.set(f"user_skins_{user_id}", json.dumps(user_skins), ex=ttl)
         print(user_skins)
     current = f"Отслеживать изменение цены на <b>{current:.2f}$</b>" if current else 'Для отслеживание цены нажмите на <b>"+"</b>'
     caption = f"<b>Настройки 🛠️</b>\n\n{build['caption']}\n\nОтслеживаемых предметов <b>({count})</b>\n\n{current}"

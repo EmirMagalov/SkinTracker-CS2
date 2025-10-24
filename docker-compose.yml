@@ -1,13 +1,13 @@
 version: '3.8'
 services:
-  #  db:
-  #    image: postgres:13
-  #    environment:
-  #      POSTGRES_DB: ${POSTGRES_DB}
-  #      POSTGRES_USER: ${POSTGRES_USER}
-  #      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  #    volumes:
-  #      - postgres_data:/var/lib/postgresql/data
+  db:
+     image: postgres:13
+     environment:
+       POSTGRES_DB: ${POSTGRES_DB}
+       POSTGRES_USER: ${POSTGRES_USER}
+       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+     volumes:
+       - postgres_data:/var/lib/postgresql/data
   django:
     build:
       context: .
@@ -19,14 +19,12 @@ services:
     #        - media:/app/media
     ports:
       - "8000:8000"
-    #      depends_on:
-    #        - db
+
     depends_on:
+      - db
       - redis
     env_file: .env
-  #      environment:
-  #        - DEBUG=1
-  #        - DJANGO_SETTINGS_MODULE=taskmanager.settings
+
 
 
   bot:
@@ -38,14 +36,10 @@ services:
       - ./bot:/bot_app
     working_dir: /bot_app
     depends_on:
+      - db
       - redis
     env_file: .env
-    #    depends_on:
-    #      - db
-
-  #volumes:
-  #  postgres_data:
-  #  media:
+    
   celery:
     build:
       context: .
@@ -53,6 +47,7 @@ services:
     #    command: bash -c "celery -A taskmanager purge --force  && celery -A taskmanager worker --loglevel=info"
     command: celery -A skinsprice worker --loglevel=info
     depends_on:
+      - db
       - redis
     volumes:
       - ./skinsprice:/django_app
@@ -66,6 +61,7 @@ services:
       dockerfile: Dockerfile-django
     command: celery -A skinsprice beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     depends_on:
+      - db
       - redis
       - django
     volumes:
@@ -81,5 +77,7 @@ services:
       - ./redis_data:/data
     restart: always
 
-
+volumes:
+  postgres_data:
+  redis_data:
 

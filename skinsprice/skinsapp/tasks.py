@@ -14,6 +14,8 @@ from redis.asyncio import Redis
 from .models import Skin, UserSkin
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import InlineKeyboardButton
+import requests
+import json
 
 load_dotenv()
 logging.basicConfig(
@@ -159,3 +161,41 @@ def check_all_prices():
         loop.run_until_complete(process_skins())
     finally:
         loop.close()
+
+LANGS = ['en', 'ru']
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))  # .../skinsprice/skinsapp
+BASE_DIR = os.path.dirname(os.path.dirname(CURRENT_DIR))  # поднимаемся на 2 уровня → CSSkins
+SAVE_PATH = os.path.join(BASE_DIR, "bot")  # CSSkins/bot
+
+async def fetch_json(session, url):
+    """Асинхронно загружает JSON с указанного URL, игнорируя Content-Type"""
+    try:
+        async with session.get(url, timeout=10) as resp:
+            resp.raise_for_status()
+            text = await resp.text()
+            return json.loads(text)  # парсим вручную
+    except Exception as e:
+        print(f"❌ Ошибка при загрузке {url}: {e}")
+        return None
+async def update_skins_async():
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        for lang in LANGS:
+            url = f"https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/{lang}/all.json"
+            tasks.append(fetch_json(session, url))
+
+        results = await asyncio.gather(*tasks)
+
+        for lang, data in zip(LANGS, results):
+            if data is not None:
+                with open(f"{SAVE_PATH}/all_skins_{lang}.json", "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+                print(f"✅ Скины {lang} сохранены локально")
+
+
+# Celery-таск
+@shared_task
+def update_items():
+    asyncio.run(update_skins_async())
+
+

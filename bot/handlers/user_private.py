@@ -21,7 +21,7 @@ user_private_router = Router()
 
 ttl = 170
 
-
+FALLBACK_IMAGE = "./public/ak-47-rifle-silhouette-png-05252024-c6e00iov49u7tpcf.png"  # твоя заглушка (можно заменить)
 async def build_skin_message(skin, stattrak=False, condition=None):
     is_stattrakawait = await get_exact_name(f"StatTrak™ {skin['req_name']} (Field-Tested)")
     if condition == None:
@@ -142,6 +142,7 @@ async def skin_show(user_id, skin_name, event: Union[types.Message, types.Callba
         return
     if skin_id:
         skin = await get_skin(skin_id, 'ru')
+        print(skin)
         if not skin:
             await message.answer("❌ Предмет не найден")
             return
@@ -172,8 +173,10 @@ async def skin_show(user_id, skin_name, event: Union[types.Message, types.Callba
                 kb = {
                     f'Добавить в инвентарь ✚': f'add|{build["skin_id"]}|{skins_price.get("lowest_price")}|{condition}',
                     **build['kb']}
+
             if skins_price.get('lowest_price') or skins_price.get('median_price'):
                 if isinstance(event, types.Message):
+
                     await message.answer_photo(skin['image'], caption=build['caption'],
                                                reply_markup=create_inline_kb(kb),
 

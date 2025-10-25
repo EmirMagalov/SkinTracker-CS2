@@ -31,7 +31,7 @@ async def build_skin_message(user_id, skin, stattrak=False, condition=None):
 
     min_float = f"\n\nМин. степень износа - {skin['min_float']}\n" if str(skin['min_float']).lower() != 'none' else ''
     max_float = f"Макс. степень износа - {skin['max_float']}\n" if str(skin['max_float']).lower() != 'none' else ''
-    collection = f"\n\n🏷️{skin['collection']}" if skin['collection'].lower() != 'none' else ''
+    collection = f"\n\n🏷️{skin['collection']}" if str(skin['collection']).lower() != 'none' else ''
     if condition != "Collections":
         condition_show_name = lang["ru"].get(condition, condition)
 
@@ -101,7 +101,7 @@ async def search_text(skin):
     is_stattrakawait = await get_exact_name(query)
 
     stattrak = f"StatTrak™ |{'✅' if is_stattrakawait else '❌'}|"
-    collection = f"\n\n🏷️{skin['collection']}" if skin['collection'].lower() != 'none' else ''
+    collection = f"\n\n🏷️{skin['collection']}" if str(skin['collection']).lower() != 'none' else ''
     min_float = f"Мин. степень износа - {skin['min_float']}\n" if str(skin['min_float']).lower() != 'none' else ''
     max_float = f"Макс. степень износа - {skin['max_float']}\n\n" if str(skin['max_float']).lower() != 'none' else ''
     caption = f"<u><b>{skin['show_name']}</b></u>\n\n{skin['rarity']}\n\n{stattrak}{collection}\n\n{min_float}{max_float}{skin['descr']}"

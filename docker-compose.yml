@@ -54,7 +54,7 @@ services:
       - redis
     volumes:
       - ./skinsprice:/django_app
-      - ./Json:/django_app/Json
+       - ./Json:/django_app/Json
     env_file: .env
 
     restart: always

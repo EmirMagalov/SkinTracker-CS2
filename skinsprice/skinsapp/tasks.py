@@ -47,7 +47,7 @@ def create_inline_kb(data: dict[str, str], row1=1, row2=1):
 
 async def get_skin_price(skin_name, condition, session=None):
     """Получаем цену скина из Steam с кэшированием в Redis."""
-    if condition!='Collections':
+    if condition != 'Collections':
         full_name = f"{skin_name} ({condition})"
     else:
         full_name = skin_name
@@ -123,7 +123,7 @@ async def process_skins():
                     if us.threshold_value != Decimal('0.00') and abs(lowest_price - last_price) >= Decimal(
                             us.threshold_value):
 
-                        condition = f"({skin.condition})" if skin.condition!="Collections" else ''
+                        condition = f"({skin.condition})" if skin.condition != "Collections" else ''
                         skin_name = re.sub(r"★|\s*\(.*?\)", "", skin.skin_name).strip()
                         change_percent = ((lowest_price - last_price) / last_price) * 100
                         direction, icon = ("выросла", "📈") if change_percent > 0 else ("упала", "📉")
@@ -162,10 +162,12 @@ def check_all_prices():
     finally:
         loop.close()
 
+
 LANGS = ['en', 'ru']
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))  # .../skinsprice/skinsapp
 BASE_DIR = os.path.dirname(os.path.dirname(CURRENT_DIR))  # поднимаемся на 2 уровня → CSSkins
-SAVE_PATH = os.path.join(BASE_DIR, "bot")  # CSSkins/bot
+SAVE_PATH = os.path.join(BASE_DIR, os.getenv("SAVE_PATH"))  # CSSkins/bot
+
 
 async def fetch_json(session, url):
     """Асинхронно загружает JSON с указанного URL, игнорируя Content-Type"""
@@ -177,6 +179,8 @@ async def fetch_json(session, url):
     except Exception as e:
         print(f"❌ Ошибка при загрузке {url}: {e}")
         return None
+
+
 async def update_skins_async():
     async with aiohttp.ClientSession() as session:
         tasks = []
@@ -197,5 +201,3 @@ async def update_skins_async():
 @shared_task
 def update_items():
     asyncio.run(update_skins_async())
-
-

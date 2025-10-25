@@ -53,7 +53,6 @@ services:
       - redis
     volumes:
       - ./skinsprice:/django_app
-      - ./bot:/bot_app
     env_file: .env
 
     restart: always

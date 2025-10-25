@@ -29,7 +29,7 @@ async def build_skin_message(user_id, skin, stattrak=False, condition=None):
 
     min_float = f"\n\nМин. степень износа - {skin['min_float']}\n" if str(skin['min_float']).lower() != 'none' else ''
     max_float = f"Макс. степень износа - {skin['max_float']}\n" if str(skin['max_float']).lower() != 'none' else ''
-    collection = f"\n\n🏷️{skin['collection']}" if skin['collection'] != '' else ''
+    collection = f"\n\n🏷️{skin['collection']}" if skin['collection'] else ''
     if condition != "Collections":
         condition_show_name = lang["ru"].get(condition, condition)
 

@@ -20,6 +20,8 @@ from middlewares.loader import redis
 user_private_router = Router()
 
 ttl = 170
+
+
 async def build_skin_message(user_id, skin, stattrak=False, condition=None):
     is_stattrakawait = await get_exact_name(f"StatTrak™ {skin['req_name']} (Field-Tested)")
     if condition == None:
@@ -29,7 +31,7 @@ async def build_skin_message(user_id, skin, stattrak=False, condition=None):
 
     min_float = f"\n\nМин. степень износа - {skin['min_float']}\n" if str(skin['min_float']).lower() != 'none' else ''
     max_float = f"Макс. степень износа - {skin['max_float']}\n" if str(skin['max_float']).lower() != 'none' else ''
-    collection = f"\n\n🏷️{skin['collection']}" if skin['collection'] else ''
+    collection = f"\n\n🏷️{skin['collection']}" if skin['collection'].lower() != 'none' else ''
     if condition != "Collections":
         condition_show_name = lang["ru"].get(condition, condition)
 
@@ -59,7 +61,6 @@ async def build_skin_message(user_id, skin, stattrak=False, condition=None):
     median = skins_price.get('median_price')
     mid_price = f"\nСредняя цена - {median} 📊\n" if median else ""
     min_price = f"Мин. предложение - {lowest} 📉\n\n" if lowest else "\n"
-
 
     caption = f"{full_name}{mid_price}{min_price}<a href='{url}'>Посмотреть в Steam</a>"
 
@@ -168,8 +169,9 @@ async def skin_show(user_id, skin_name, event: Union[types.Message, types.Callba
                                              )
             kb = build['kb']
             if not user_skin:
-                kb = {f'Добавить в инвентарь ✚': f'add|{build["skin_id"]}|{skins_price.get("lowest_price")}|{condition}',
-                      **build['kb']}
+                kb = {
+                    f'Добавить в инвентарь ✚': f'add|{build["skin_id"]}|{skins_price.get("lowest_price")}|{condition}',
+                    **build['kb']}
             if skins_price.get('lowest_price') or skins_price.get('median_price'):
                 if isinstance(event, types.Message):
                     await message.answer_photo(skin['image'], caption=build['caption'],
@@ -252,7 +254,7 @@ async def skincalldata(call: types.CallbackQuery):
 
 
 @user_private_router.callback_query(F.data.startswith('add'))
-async def skins_add(call: types.CallbackQuery,state:FSMContext):
+async def skins_add(call: types.CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
     skincalldata = call.data.split('|')
     skin_id = skincalldata[1]
@@ -277,8 +279,8 @@ async def skins_add(call: types.CallbackQuery,state:FSMContext):
     # else:
     req_name = skin["req_name"]
 
-    add=await add_user_skin(user_id, skin_id, req_name, lowest_price_decimal,
-                        condition)
+    add = await add_user_skin(user_id, skin_id, req_name, lowest_price_decimal,
+                              condition)
     user_skins_raw = await redis.get(f'user_skins_{user_id}')
 
     if user_skins_raw:
@@ -288,9 +290,6 @@ async def skins_add(call: types.CallbackQuery,state:FSMContext):
     # else:
     #     user_skins = await get_user_skins(user_id)
     #     await redis.set(f'user_skins_{user_id}', json.dumps(user_skins), ex=300)
-
-
-
 
     await call.answer("Педмет добавлен в инвентарь!", show_alert=True)
     build = await build_skin_message(user_id=user_id, skin=skin, condition=condition
@@ -354,7 +353,7 @@ async def inventory_show(user_id, index, call: types.CallbackQuery, delete=False
 
 
 @user_private_router.callback_query(F.data.startswith('inventory_'))
-async def inventory(call: types.CallbackQuery,state:FSMContext):
+async def inventory(call: types.CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
 
     index = call.data.split('_')[-1]
@@ -364,7 +363,7 @@ async def inventory(call: types.CallbackQuery,state:FSMContext):
 
 
 @user_private_router.callback_query(F.data.startswith('delete'))
-async def delete_skin(call: types.CallbackQuery,state:FSMContext):
+async def delete_skin(call: types.CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
     skincalldata = call.data.split('|')
     skin_id = skincalldata[1]
@@ -477,7 +476,7 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
     kb[f'Шаг {new_value:.2f}$'] = 'None'
     kb['>'] = f'increase_by|{skin_id}|{condition}|{index}|plus'
 
-    if condition!= 'Collections':
+    if condition != 'Collections':
         kb['Подробнее↗️'] = f'go_to,{skin["req_name"]}'
     kb['Удалить 🗑️'] = f'delete|{skin_id}|{condition}'
     kb['Назад'] = f'inventory_{index}'

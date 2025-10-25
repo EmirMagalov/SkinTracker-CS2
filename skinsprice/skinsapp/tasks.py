@@ -123,7 +123,14 @@ async def process_skins():
 
                         condition = f"({skin.condition})" if skin.condition!="Collections" else ''
                         skin_name = re.sub(r"★|\s*\(.*?\)", "", skin.skin_name).strip()
-                        text = f"💰 Цена на <b>{skin_name} {condition}</b> изменилась!\n\nПредыдущая цена: {last_price:.2f}$\nТекущая цена: {lowest_price}$"
+                        change_percent = ((lowest_price - last_price) / last_price) * 100
+                        direction, icon = ("выросла", "📈") if change_percent > 0 else ("упала", "📉")
+                        text = (
+                            f"💰 Цена на <b>{skin_name} {condition}</b> изменилась!\n\n"
+                            f"Предыдущая цена: {last_price:.2f}$\n"
+                            f"Текущая цена: {lowest_price:.2f}$\n"
+                            f"{icon} Цена {direction} на {abs(change_percent):.2f}%"
+                        )
                         try:
                             user_id = await sync_to_async(lambda: us.user.user_id)()
                             await bot.send_message(user_id, text, reply_markup=create_inline_kb(

@@ -22,7 +22,7 @@ user_private_router = Router()
 ttl = 170
 
 
-async def build_skin_message(user_id, skin, stattrak=False, condition=None):
+async def build_skin_message(skin, stattrak=False, condition=None):
     is_stattrakawait = await get_exact_name(f"StatTrak™ {skin['req_name']} (Field-Tested)")
     if condition == None:
         condition = "Collections"
@@ -165,7 +165,7 @@ async def skin_show(user_id, skin_name, event: Union[types.Message, types.Callba
             condition = 'Collections'
             user_skin = await get_user_skin(user_id, skin_id, condition)
 
-            build = await build_skin_message(user_id=user_id, skin=skin,
+            build = await build_skin_message(skin=skin,
                                              )
             kb = build['kb']
             if not user_skin:
@@ -227,7 +227,7 @@ async def skincalldata(call: types.CallbackQuery):
 
     # skins_price = await get_skin_price(skin["req_name"], condition)
 
-    build = await build_skin_message(user_id=user_id, skin=skin,
+    build = await build_skin_message(skin=skin,
                                      condition=condition, stattrak=stattrak)
     user_skin = await get_user_skin(user_id, build["skin_id"], condition)
 
@@ -292,7 +292,7 @@ async def skins_add(call: types.CallbackQuery, state: FSMContext):
     #     await redis.set(f'user_skins_{user_id}', json.dumps(user_skins), ex=300)
 
     await call.answer("Педмет добавлен в инвентарь!", show_alert=True)
-    build = await build_skin_message(user_id=user_id, skin=skin, condition=condition
+    build = await build_skin_message(skin=skin, condition=condition
                                      )
 
     await call.message.edit_caption(caption=build['caption'],
@@ -326,7 +326,7 @@ async def inventory_show(user_id, index, call: types.CallbackQuery, delete=False
     condition = user_skins['condition']
     skin = await get_skin(skin_id, 'ru')
 
-    build = await build_skin_message(user_id=user_id, skin=skin,
+    build = await build_skin_message(skin=skin,
                                      condition=condition)
 
     caption = f"<b>Инвентарь 🗄️</b>\n<i>Предмет {index + 1}/{user_skins_len}</i>\n\n{build['caption']}"
@@ -372,7 +372,7 @@ async def delete_skin(call: types.CallbackQuery, state: FSMContext):
     await delete_user_skin(user_id, skin_id, condition)
     skin = await get_skin(skin_id, 'ru')
     await redis.delete(f"user_skins_{user_id}")
-    await build_skin_message(user_id=user_id, skin=skin, condition=condition)
+    await build_skin_message(skin=skin, condition=condition)
     index = 0
     await inventory_show(user_id, index, call, delete=True)
 
@@ -419,7 +419,7 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
 
     await state.update_data(increase_by_index=current_index)
     skin = await get_skin(skin_id, 'ru')
-    build = await build_skin_message(user_id=user_id, skin=skin,
+    build = await build_skin_message(skin=skin,
                                      condition=condition)
 
     user_skin = next(

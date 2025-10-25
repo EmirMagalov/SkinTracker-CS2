@@ -59,7 +59,7 @@ async def build_skin_message(skin, stattrak=False, condition=None):
 
     lowest = skins_price.get('lowest_price')
     median = skins_price.get('median_price')
-    mid_price = f"\nСредняя цена - {median} 📊\n" if median else ""
+    mid_price = f"\nСредняя цена - {median} 📊\n" if median else "\n"
     min_price = f"Мин. предложение - {lowest} 📉\n\n" if lowest else "\n"
 
     caption = f"{full_name}{mid_price}{min_price}<a href='{url}'>Посмотреть в Steam</a>"

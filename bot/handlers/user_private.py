@@ -101,10 +101,10 @@ async def search_text(skin):
     is_stattrakawait = await get_exact_name(query)
 
     stattrak = f"StatTrak™ |{'✅' if is_stattrakawait else '❌'}|"
-
+    collection = f"\n\n🏷️{skin['collection']}" if skin['collection'].lower() != 'none' else ''
     min_float = f"Мин. степень износа - {skin['min_float']}\n" if str(skin['min_float']).lower() != 'none' else ''
     max_float = f"Макс. степень износа - {skin['max_float']}\n\n" if str(skin['max_float']).lower() != 'none' else ''
-    caption = f"<u><b>{skin['show_name']}</b></u>\n\n{skin['rarity']}\n\n{stattrak}\n\n🏷️{skin['collection']}\n\n{min_float}{max_float}{skin['descr']}"
+    caption = f"<u><b>{skin['show_name']}</b></u>\n\n{skin['rarity']}\n\n{stattrak}{collection}\n\n{min_float}{max_float}{skin['descr']}"
 
     kb = condition_kbds(skin['skin_id'], is_stattrakawait)
     return caption, kb

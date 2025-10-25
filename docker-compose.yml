@@ -36,7 +36,7 @@ services:
     container_name: bot
     volumes:
       - ./bot:/bot_app
-      - ./Json:/app/Json
+      - ./Json:/shared/Json
     working_dir: /bot_app
     depends_on:
       - db
@@ -54,7 +54,7 @@ services:
       - redis
     volumes:
       - ./skinsprice:/django_app
-      - ./Json:/django_app/Json
+      - ./Json:/shared/Json
     env_file: .env
 
     restart: always

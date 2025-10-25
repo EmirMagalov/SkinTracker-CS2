@@ -1,13 +1,13 @@
 version: '3.8'
 services:
   db:
-     image: postgres:15
-     environment:
-       POSTGRES_DB: ${POSTGRES_DB}
-       POSTGRES_USER: ${POSTGRES_USER}
-       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-     volumes:
-       - postgres_data:/var/lib/postgresql/data
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
   django:
     build:
       context: .
@@ -25,7 +25,7 @@ services:
       - redis
     env_file: .env
 
-    
+
 
 
 
@@ -36,13 +36,13 @@ services:
     container_name: bot
     volumes:
       - ./bot:/bot_app
-      - ./Json:/django_app/data
+      - ./Json:/bot_app/Json
     working_dir: /bot_app
     depends_on:
       - db
       - redis
     env_file: .env
-    
+
   celery:
     build:
       context: .
@@ -54,7 +54,7 @@ services:
       - redis
     volumes:
       - ./skinsprice:/django_app
-      - ./Json:/django_app/data
+      - ./Json:/django_app/Json
     env_file: .env
 
     restart: always

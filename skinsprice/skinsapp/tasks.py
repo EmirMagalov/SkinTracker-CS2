@@ -177,7 +177,7 @@ async def fetch_json(session, url):
             text = await resp.text()
             return json.loads(text)  # парсим вручную
     except Exception as e:
-        print(f"❌ Ошибка при загрузке {url}: {e}")
+        logger.info(f"❌ Ошибка при загрузке {url}: {e}")
         return None
 
 
@@ -194,7 +194,7 @@ async def update_skins_async():
             if data is not None:
                 with open(f"{SAVE_PATH}/all_skins_{lang}.json", "w", encoding="utf-8") as f:
                     json.dump(data, f, ensure_ascii=False, indent=2)
-                print(f"✅ Скины {lang} сохранены локально")
+                logger.info(f"✅ Скины {lang} сохранены локально")
 
 
 # Celery-таск

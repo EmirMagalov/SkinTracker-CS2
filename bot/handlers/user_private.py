@@ -22,6 +22,8 @@ user_private_router = Router()
 ttl = 170
 
 FALLBACK_IMAGE = "./public/ak-47-rifle-silhouette-png-05252024-c6e00iov49u7tpcf.png"  # твоя заглушка (можно заменить)
+
+
 async def build_skin_message(skin, stattrak=False, condition=None):
     is_stattrakawait = await get_exact_name(f"StatTrak™ {skin['req_name']} (Field-Tested)")
     if condition == None:
@@ -142,7 +144,7 @@ async def skin_show(user_id, skin_name, event: Union[types.Message, types.Callba
         return
     if skin_id:
         skin = await get_skin(skin_id, 'ru')
-        print(skin)
+
         if not skin:
             await message.answer("❌ Предмет не найден")
             return

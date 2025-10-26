@@ -478,7 +478,7 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
 
         # !!! Обновляем список в state
         await redis.set(f"user_skins_{user_id}", json.dumps(user_skins), ex=ttl)
-        print(user_skins)
+
     current = f"Отслеживать изменение цены на <b>{current:.2f}$</b>" if current else 'Для отслеживание цены нажмите на <b>"+"</b>'
     caption = f"<b>Настройки 🛠️</b>\n\n{build['caption']}\n\nОтслеживаемых предметов <b>({count})</b>\n\n{current}"
     kb = {}

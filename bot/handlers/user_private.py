@@ -287,11 +287,17 @@ async def skins_add(call: types.CallbackQuery, state: FSMContext):
     add = await add_user_skin(user_id, skin_id, req_name, lowest_price_decimal,
                               condition)
     user_skins_raw = await redis.get(f'user_skins_{user_id}')
-
-    if user_skins_raw:
-        user_skins = json.loads(user_skins_raw)  # превращаем JSON в список словарей
-        user_skins.insert(0, add)  # вставляем элемент в начало списка
-        await redis.set(f"user_skins_{user_id}", json.dumps(user_skins), ex=ttl)
+    if user_skins_raw in (None, b'null', b'[]'):
+        user_skins = []
+    else:
+        try:
+            user_skins = json.loads(user_skins_raw)
+            if not isinstance(user_skins, list):
+                user_skins = []
+        except json.JSONDecodeError:
+            user_skins = []
+    user_skins.insert(0, add)
+    await redis.set(f"user_skins_{user_id}", json.dumps(user_skins), ex=ttl)
     # else:
     #     user_skins = await get_user_skins(user_id)
     #     await redis.set(f'user_skins_{user_id}', json.dumps(user_skins), ex=300)
@@ -313,6 +319,7 @@ async def inventory_show(user_id, index, call: types.CallbackQuery, delete=False
         user_skins = json.loads(user_skins_raw)  # превращаем JSON в список словарей
     else:
         user_skins = await get_user_skins(user_id)
+
         await redis.set(f'user_skins_{user_id}', json.dumps(user_skins), ex=ttl)
     if not user_skins:
         if delete:

@@ -314,7 +314,6 @@ async def inventory_show(user_id, index, call: types.CallbackQuery, delete=False
     else:
         user_skins = await get_user_skins(user_id)
         await redis.set(f'user_skins_{user_id}', json.dumps(user_skins), ex=ttl)
-    user_skins_len = len(user_skins)
     if not user_skins:
         if delete:
             await start_message(call.message)
@@ -323,12 +322,14 @@ async def inventory_show(user_id, index, call: types.CallbackQuery, delete=False
             await call.answer("Инвентарь пустой!", show_alert=True)
             await call.answer()
         return
-    try:
-        user_skins = user_skins[index]
-    except:
-        user_skins = user_skins[0]
-    skin_id = user_skins['skin_id']
-    condition = user_skins['condition']
+    user_skins_len = len(user_skins)
+
+    if index < 0 or index >= user_skins_len:
+        index = 0
+    current_skin = user_skins[index]
+     # ← Длина списка
+    skin_id = current_skin['skin_id']
+    condition = current_skin['condition']
     skin = await get_skin(skin_id, 'ru')
 
     build = await build_skin_message(skin=skin,

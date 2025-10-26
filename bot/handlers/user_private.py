@@ -460,6 +460,7 @@ async def settings(call: types.CallbackQuery, state: FSMContext):
             # Если предмет новый и лимит достигнут — нельзя добавлять
             if current == 0 and count >= 5:
                 await call.answer('Нельзя отслеживать больше 5 предметов!', show_alert=True)
+                return
             else:
                 # Если предмет новый — увеличиваем счётчик
                 if current == 0:

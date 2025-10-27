@@ -164,38 +164,38 @@ def check_all_prices():
 
 
 LANGS = ['en', 'ru']
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))  # .../skinsprice/skinsapp
-BASE_DIR = os.path.dirname(os.path.dirname(CURRENT_DIR))  # поднимаемся на 2 уровня → CSSkins
-SAVE_PATH = os.path.join(BASE_DIR, os.getenv("SAVE_PATH"))  # CSSkins/bot
-
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(CURRENT_DIR))
+SAVE_PATH = os.path.join(BASE_DIR, os.getenv("SAVE_PATH"))
 
 async def fetch_json(session, url):
-    """Асинхронно загружает JSON с указанного URL, игнорируя Content-Type"""
     try:
         async with session.get(url, timeout=10) as resp:
             resp.raise_for_status()
             text = await resp.text()
-            return json.loads(text)  # парсим вручную
+            return json.loads(text)
     except Exception as e:
         logger.info(f"❌ Ошибка при загрузке {url}: {e}")
         return None
 
-
 async def update_skins_async():
+    os.makedirs(SAVE_PATH, exist_ok=True)  # убедимся, что папка существует
     async with aiohttp.ClientSession() as session:
-        tasks = []
-        for lang in LANGS:
-            url = f"https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/{lang}/all.json"
-            tasks.append(fetch_json(session, url))
-
+        tasks = [fetch_json(session, f"https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/{lang}/all.json") for lang in LANGS]
         results = await asyncio.gather(*tasks)
 
         for lang, data in zip(LANGS, results):
             if data is not None:
-                with open(f"{SAVE_PATH}/all_skins_{lang}.json", "w", encoding="utf-8") as f:
-                    json.dump(data, f, ensure_ascii=False, indent=2)
-                logger.info(f"✅ Скины {lang} сохранены локально")
+                temp_file = f"{SAVE_PATH}/all_skins_{lang}.json.tmp"
+                final_file = f"{SAVE_PATH}/all_skins_{lang}.json"
 
+                # запись в временный файл
+                with open(temp_file, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+
+                # атомарная замена
+                os.replace(temp_file, final_file)
+                logger.info(f"✅ Скины {lang} сохранены локально")
 
 # Celery-таск
 @shared_task

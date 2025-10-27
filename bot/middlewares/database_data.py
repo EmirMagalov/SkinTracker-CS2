@@ -9,25 +9,40 @@ API =os.getenv('URL')
 
 CACHE_TTL = 180  # 3 минут
 
-
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/128.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/json, text/javascript, */*; q=0.01",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Referer": "https://steamcommunity.com/market/",
+    "X-Requested-With": "XMLHttpRequest",
+}
 async def get_skin_price(skin_name, condition=None):
     if condition:
         full_name = f"{skin_name} ({condition})"
     else:
         full_name = f"{skin_name}"
+
     encoded_name = urllib.parse.quote(full_name)
+    print(encoded_name)
+
     key = f"steam_price:{encoded_name}"
     cached = await redis.get(key)
     if cached:
         return json.loads(cached)
     url = f"https://steamcommunity.com/market/priceoverview/?appid=730&currency=1&market_hash_name={encoded_name}&format=json"
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(headers=HEADERS) as session:
         async with session.get(url) as response:
             if response.status == 200:
                 data = await response.json()
+
                 await redis.setex(key, CACHE_TTL, json.dumps(data))
                 return data
             else:
+
                 return None
 
 

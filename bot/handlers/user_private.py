@@ -58,7 +58,6 @@ async def build_skin_message(skin, stattrak=False, condition=None):
 
     url = f"https://steamcommunity.com/market/listings/730/{encoded_name}"
     skins_price = await get_skin_price(req_name, condition if condition != "Collections" else '')
-
     lowest = skins_price.get('lowest_price')
     median = skins_price.get('median_price')
     mid_price = f"\nСредняя цена - {median} 📊\n" if median else "\n"

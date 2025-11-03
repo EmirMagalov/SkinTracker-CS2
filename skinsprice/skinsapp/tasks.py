@@ -14,9 +14,9 @@ from redis.asyncio import Redis
 from .models import Skin, UserSkin
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import InlineKeyboardButton
-import requests
+from fake_useragent import UserAgent
 import json
-
+ua = UserAgent()
 load_dotenv()
 logging.basicConfig(
     level=logging.INFO,  # или DEBUG
@@ -46,6 +46,7 @@ def create_inline_kb(data: dict[str, str], row1=1, row2=1):
 
 
 async def get_skin_price(skin_name, condition, session=None):
+
     """Получаем цену скина из Steam с кэшированием в Redis."""
     if condition != 'Collections':
         full_name = f"{skin_name} ({condition})"
@@ -73,6 +74,13 @@ async def get_skin_price(skin_name, condition, session=None):
 
 
 async def process_skins():
+    headers = {
+        "User-Agent": ua.random,  # случайный User-Agent
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://steamcommunity.com/market/",
+        "X-Requested-With": "XMLHttpRequest",
+    }
     """Асинхронная проверка цен и уведомление пользователей."""
     skins = await sync_to_async(list)(Skin.objects.all())
     if not skins:
@@ -82,7 +90,7 @@ async def process_skins():
     bot = Bot(token=BOT_TOKEN)
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(headers=headers) as session:
 
         async def fetch_and_notify(skin):
             async with semaphore:

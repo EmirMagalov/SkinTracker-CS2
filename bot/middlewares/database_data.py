@@ -25,7 +25,6 @@ async def get_skin_price(skin_name, condition=None):
         full_name = f"{skin_name}"
 
     encoded_name = urllib.parse.quote(full_name)
-    print(encoded_name)
 
     key = f"steam_price:{encoded_name}"
     cached = await redis.get(key)

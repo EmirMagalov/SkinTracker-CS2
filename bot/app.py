@@ -1,6 +1,6 @@
 import os
 import asyncio
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv
 from handlers.user_private import user_private_router
 from aiogram.fsm.storage.redis import RedisStorage

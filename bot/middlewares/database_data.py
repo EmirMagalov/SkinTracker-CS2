@@ -1,26 +1,24 @@
 import os
 import json
 import aiohttp
+from fake_useragent import UserAgent
 import urllib.parse
 from middlewares.loader import redis
 from dotenv import load_dotenv
 load_dotenv()
 API =os.getenv('URL')
-
+ua = UserAgent()
 CACHE_TTL = 180  # 3 минут
 
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/128.0.0.0 Safari/537.36"
-    ),
-    "Accept": "application/json, text/javascript, */*; q=0.01",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Referer": "https://steamcommunity.com/market/",
-    "X-Requested-With": "XMLHttpRequest",
-}
+
 async def get_skin_price(skin_name, condition=None):
+    headers = {
+        "User-Agent": ua.random,  # случайный User-Agent
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://steamcommunity.com/market/",
+        "X-Requested-With": "XMLHttpRequest",
+    }
     if condition:
         full_name = f"{skin_name} ({condition})"
     else:
@@ -33,13 +31,16 @@ async def get_skin_price(skin_name, condition=None):
     cached = await redis.get(key)
     if cached:
         return json.loads(cached)
+    # url = "https://corsproxy.io/?url=https://steamcommunity.com/market/priceoverview/?appid=730&currency=1&market_hash_name=StatTrak™%20AK-47%20%7C%20Redline%20%28Battle-Scarred%29&format=json"
     url = f"https://steamcommunity.com/market/priceoverview/?appid=730&currency=1&market_hash_name={encoded_name}&format=json"
-    async with aiohttp.ClientSession(headers=HEADERS) as session:
+    async with aiohttp.ClientSession(headers=headers) as session:
         async with session.get(url) as response:
+
             if response.status == 200:
                 data = await response.json()
 
                 await redis.setex(key, CACHE_TTL, json.dumps(data))
+
                 return data
             else:
 
